@@ -1,11 +1,10 @@
-import React, { FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
 import {
   useGetHostQuery,
   useUpdateProfileMutation,
-  useUsersFileQuery,
 } from "../../redux/api/userApi";
 import toast from "react-hot-toast";
 import default_avatar from "../../assets/images/default_avatar.jpg";
@@ -47,17 +46,17 @@ interface User {
   ip: string;
 }
 // Define an interface for CSS classes
-interface CSSClasses {
-  cls1: string;
-  cls2: string;
-}
+// interface CSSClasses {
+//   cls1: string;
+//   cls2: string;
+// }
 
 const HostProfile = () => {
   // Define CSS classes
-  const classes: CSSClasses = {
-    cls1: "fill:#1877f2;",
-    cls2: "fill:#fff;",
-  };
+  // const classes: CSSClasses = {
+  //   cls1: "fill:#1877f2;",
+  //   cls2: "fill:#fff;",
+  // };
 
   const user = useSelector(
     (state: RootState) => state.auth.user
@@ -67,19 +66,27 @@ const HostProfile = () => {
 
   const [dateCreated, setDateCreated] = useState<string>("");
   const [email, setEmail] = useState<string>("");
-  const [about, setAbout] = useState<string>("");
+  // const [about, setAbout] = useState<string>("");
   const [bankCode, setBankCode] = useState<string>("");
   const [instagram, setInstagram] = useState<string>("");
   const [facebook, setFacebook] = useState<string>("");
   const [twitter, setTwitter] = useState<string>("");
   const [accountName, setAccountName] = useState<string>("");
 
+  console.log(dateCreated);
+  console.log(email);
+  console.log(bankCode);
+  console.log(instagram);
+  console.log(facebook);
+
   const [hostname, setHostName] = useState<string>("");
+  console.log(hostname);
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  const [updateProfile, { isLoading, error, isSuccess }] =
-    useUpdateProfileMutation();
+  console.log(twitter);
+  console.log(accountName);
+  const [updateProfile, { error, isSuccess }] = useUpdateProfileMutation();
+  console.log(updateProfile);
   const updateStatus = useSelector(
     (state: RootState) => state.event.updateStatus
   );
@@ -110,7 +117,7 @@ const HostProfile = () => {
       toast.success("User Updated");
       navigate(0);
     }
-  }, [data, error, isSuccess, navigate]);
+  }, [data, error, isSuccess, navigate, userData]);
   useEffect(() => {
     if (updateStatus || data || user) {
       dispatch(setUpdateStatus(false)); // reset update status to false
@@ -124,6 +131,7 @@ const HostProfile = () => {
           <img
             src="https://vojislavd.com/ta-template-demo/assets/img/profile-background.jpg"
             className="w-full h-full rounded-tl-lg rounded-tr-lg"
+            alt="blue"
           />
         </div>
         <div className="flex flex-col items-center -mt-20">

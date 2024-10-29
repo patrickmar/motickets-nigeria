@@ -39,10 +39,10 @@ const DropdownCountry = () => {
         className="flex items-center gap-4"
       >
         <img
-          src={`https://flagcdn.com/w320/gb.png`}
+          src={`https://flagcdn.com/w320/ng.png`}
           className="h-5 w-5 rounded-full me-2"
         />
-        <span className="hidden sm:block">United Kingdom (UK)</span>
+        <span className="hidden sm:block">Nigeria (NG)</span>
         <svg
           className={`hidden fill-current sm:block ${
             dropdownOpen ? "rotate-180" : ""

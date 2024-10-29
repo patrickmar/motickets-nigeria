@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useGetHostEventByIdQuery } from "../../redux/api/eventApi";
 import f10 from "../../assets/images/f10.png";
-import toast from "react-hot-toast";
+// import toast from "react-hot-toast";
 import { setUpdateStatus } from "../../features/eventSlice";
 
 interface Event {
@@ -18,9 +18,9 @@ interface Event {
   ticketCategories: { price: string }[];
 }
 
-interface EventResponse {
-  data: Event[];
-}
+// interface EventResponse {
+//   data: Event[];
+// }
 
 interface User {
   id: string;
@@ -48,7 +48,7 @@ const FinancialCard: React.FC<{ onViewReport: () => void }> = ({
     }
   }, [updateStatus, refetch, dispatch]);
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const eventList: Event[] = events?.data || [];
 
@@ -66,7 +66,7 @@ const FinancialCard: React.FC<{ onViewReport: () => void }> = ({
                       ? `${process.env.REACT_APP_IMAGEURL}/${event.imgs[0]?.img}`
                       : f10
                   }
-                  alt="Event Image"
+                  alt="Event-blue"
                   onError={(e) => {
                     e.currentTarget.src = f10; // fallback if image fails to load
                   }}
