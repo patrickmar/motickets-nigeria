@@ -1,0 +1,220 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* .animate-mobileMenu {
+    @apply mobileMenuAnimation
+  } */
+}
+
+.mobileMenuAnimation {
+  animation: mobileMenu 0.3s ease forwards;
+}
+
+.top {
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(3.5px);
+  -webkit-backdrop-filter: blur(3.5px);
+}
+
+.show {
+  background-color: var(--black3);
+}
+
+.hide {
+  transform: translateY(-60px);
+}
+
+.disabled {
+  @apply cursor-not-allowed bg-disable text-grey-600 hover:opacity-20 hover:text-white;
+  /* opacity-25 */
+}
+
+.lazy-load-image-background {
+  display: inline !important;
+}
+
+.contentWrapper {
+  @apply w-full max-w-[1200px] mx-auto my-0 px-[20px] py-0 z-[1];
+}
+
+.aby > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(1.5rem * var(--tw-space-y-reverse));
+}
+
+.abj > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-x-reverse: 0;
+  margin-right: calc(1rem * var(--tw-space-x-reverse));
+  margin-left: calc(1rem * calc(1 - var(--tw-space-x-reverse)));
+}
+
+.form-error {
+  @apply mt-2 text-xs text-red-600 dark:text-red-600;
+}
+
+.PhoneInputInput,
+.inputClass {
+  @apply bg-gray-50  text-gray-900 sm:text-sm rounded-lg focus:ring-blue-600 focus:border-blue-600 block w-full p-1.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500;
+}
+
+.PhoneInput--focus {
+  @apply border-none border border-gray-300 focus:border-0 focus:ring-blue-500;
+}
+
+.header {
+  @apply fixed w-full translate-y-0 h-14 z-[2] flex items-center transition-all ease-in duration-500;
+}
+
+.header .contentWrapper {
+  @apply flex items-center justify-between;
+}
+
+.logo {
+  @apply h-12 cursor-pointer;
+}
+
+.menuItem {
+  @apply h-16 flex items-center mx-4 text-white font-semibold relative cursor-pointer hover:text-red-600;
+}
+
+.searchIcon {
+  @apply mr-0;
+}
+
+.menuItem svg {
+  @apply text-lg;
+}
+
+.menuItems {
+  @apply list-none hidden items-center md:flex;
+}
+
+.mobileMenuItems {
+  @apply flex items-center gap-20 md:hidden;
+}
+
+.mobileMenuItems svg {
+  @apply text-white text-lg;
+}
+
+.mobileView .menuItems {
+  @apply flex absolute top-16 left-0 bg-black flex-col w-full pt-20 border-t border-white border-opacity-10 animate-[mobileMenu];
+}
+
+.mobileView .menuItems menuItem {
+  @apply text-lg w-full h-auto p-4;
+}
+
+/* .searchBar {
+  @apply w-full h-16 bg-white absolute top-16 animate-[mobileMenu]
+}
+
+.searchInput svg {
+  @apply text-lg flex-shrink-0 ml-10 cursor-pointer
+} */
+
+/* .searchInput input {
+  @apply w-full h-48 bg-white outline-none border-0 rounded-tl-[30] rounded-bl-[30] p-4 text-sm md:h-60 md:text-lg md:p-0
+} */
+
+@keyframes mobileMenu {
+  0% {
+    transform: translateY(-130%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.heroBanner {
+  @apply w-full h-[450px] bg-black flex items-center relative md:h-[700px];
+}
+
+.heroBanner .backdrop-img {
+  @apply w-full h-full absolute top-0 left-0 opacity-50 overflow-hidden;
+}
+
+.heroBanner .backdrop-img .lazy-load-image-background {
+  @apply w-full h-full;
+}
+
+.heroBanner .backdrop-img .lazy-load-image-background img {
+  @apply w-full h-full object-cover object-center;
+}
+
+:root {
+  --gradient-background: linear-gradient(
+    180deg,
+    rgba(4, 21, 45, 0) 0%,
+    #04152d 79.17%
+  );
+}
+
+.gradientBackground {
+  background: var(--gradient-background);
+}
+
+.heroBanner .opacity-layer {
+  background: linear-gradient(180deg, rgba(4, 21, 45, 0) 0%, #04152d 79.17%);
+  @apply h-[250px] w-full absolute bottom-0 left-0;
+}
+
+.heroBannerContent {
+  @apply flex flex-col items-center text-white text-center max-w-[800px] mx-auto my-0;
+}
+
+.heroBanner .heroBannerContent .title {
+  @apply text-5xl font-bold md:mb-0 md:text-[90px];
+}
+
+.heroBanner .heroBannerContent .subTitle {
+  @apply text-lg font-medium mb-10 md:text-2xl;
+}
+
+.heroBanner .heroBannerContent .searchInput {
+  @apply flex items-center w-full;
+}
+
+.heroBanner .heroBannerContent .searchInput input {
+  @apply h-12 bg-white outline-0 border-0 rounded-tl-[30px] rounded-bl-[30px] w-[calc(100%-100px)] py-0 px-4 text-base md:w-[calc(100%-150px)] md:h-[60px] md:text-lg md:py-0 md:px-8;
+}
+
+.heroBanner .heroBannerContent .searchInput button {
+  @apply w-[100px] h-[50px] bg-red-600 outline-0 text-base cursor-pointer md:h-[60px] md:w-[150px] md:text-lg rounded-tr-[30px] rounded-br-[30px];
+}
+
+/* .carouselSection {
+  @apply relative mb-[70px];
+} */
+
+/* .carouselSection .contentWrapper {
+  @apply flex items-center justify-between mb-[20px];
+} */
+
+/* .carouselSection .carouselTitle {
+  @apply text-2xl text-white font-normal;
+} */
+
+.switchingTabs {
+  @apply h-[34px] bg-white rounded-[20px] p-[2px];
+}
+
+.switchingTabs .tabItems {
+  @apply flex items-center h-[30px] relative;
+}
+
+.switchingTabs .tabItems .tabItem {
+  @apply h-full flex items-center justify-center w-[100px] text-black text-sm relative z-[1] cursor-pointer transition-colors duration-[0.3s];
+}
+
+.switchingTabs .tabItems .tabItem.active {
+  @apply text-white;
+}
+
+.switchingTabs .tabItems .movingBg {
+  @apply h-[30px] w-[100px] rounded-[15px] absolute left-0 bg-gradient-to-r from-purple-500 to-pink-500 ease-[cubic-bezier(0.88,-0.35,0.565,1.35)] duration-[0.4s] transition-[left];
+}
