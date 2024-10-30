@@ -149,17 +149,12 @@ const CheckoutForm = (props: Props) => {
     validate();
   };
 
-  useEffect(() => {
-    validate();
-  }, [formData, validate]);
-
   const onSubmit: FormEventHandler<HTMLFormElement> = async (
     e: FormEvent<HTMLFormElement>
   ) => {
     e.preventDefault();
     if (!terms) {
       toast.error("Please accept the terms and conditions");
-    } else {
       const ticketData = {
         firstName,
         lastName,
@@ -195,6 +190,9 @@ const CheckoutForm = (props: Props) => {
   const onDiscountChange = (e: ChangeEvent<HTMLInputElement>) => {
     setDiscount(e.target.value);
   };
+  useEffect(() => {
+    validate();
+  }, [formData, validate]);
 
   const onDiscountClick = () => {};
 
