@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
 import {
@@ -60,7 +60,6 @@ const EditProfile = () => {
   const [website, setWebsite] = useState<string>("");
 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
   const [updateProfile, { isLoading, error, isSuccess }] =
     useUpdateProfileMutation();
@@ -92,7 +91,7 @@ const EditProfile = () => {
       toast.success("User Updated");
       navigate(0);
     }
-  }, [data, error, isSuccess, navigate]);
+  }, [data, error, isSuccess, navigate, userData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

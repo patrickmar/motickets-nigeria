@@ -140,36 +140,6 @@ const CheckoutForm = (props: Props) => {
     }));
   };
 
-  const onFocus = (e: FocusEvent<HTMLInputElement>) => {
-    const { name } = e.target;
-    setTouched({ ...touched, [name]: true });
-  };
-
-  const onBlur = () => {
-    validate();
-  };
-
-  const onSubmit: FormEventHandler<HTMLFormElement> = async (
-    e: FormEvent<HTMLFormElement>
-  ) => {
-    e.preventDefault();
-    if (!terms) {
-      toast.error("Please accept the terms and conditions");
-      const ticketData = {
-        firstName,
-        lastName,
-        email,
-        phoneNo,
-        userConsent,
-        terms,
-        discount,
-        tickets,
-      };
-
-      setTicketDatas(ticketData);
-    }
-  };
-
   const validate = () => {
     validationSchema
       .validate(formData, { abortEarly: false })
@@ -187,14 +157,47 @@ const CheckoutForm = (props: Props) => {
     validationSchema.isValid(formData).then((valid) => setDisabled(!valid));
   };
 
-  const onDiscountChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setDiscount(e.target.value);
+  const onFocus = (e: FocusEvent<HTMLInputElement>) => {
+    const { name } = e.target;
+    setTouched({ ...touched, [name]: true });
   };
+
+  const onBlur = () => {
+    validate();
+  };
+
   useEffect(() => {
     validate();
   }, [formData, validate]);
 
+  const onSubmit: FormEventHandler<HTMLFormElement> = async (
+    e: FormEvent<HTMLFormElement>
+  ) => {
+    e.preventDefault();
+    if (!terms) {
+      toast.error("Please accept the terms and conditions");
+    } else {
+      const ticketData = {
+        firstName,
+        lastName,
+        email,
+        phoneNo,
+        userConsent,
+        terms,
+        discount,
+        tickets,
+      };
+
+      setTicketDatas(ticketData);
+    }
+  };
+
+  const onDiscountChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setDiscount(e.target.value);
+  };
+  console.log(onDiscountChange);
   const onDiscountClick = () => {};
+  console.log(onDiscountClick);
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">

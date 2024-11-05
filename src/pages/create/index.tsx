@@ -499,7 +499,7 @@ const CreateEventForm: React.FC = () => {
                   value={eventData.venue}
                   onChange={handleChange}
                   required
-                  placeholder="London, England"
+                  placeholder="Lagos, Nigeria"
                 />
               </div>
               <div className="mb-4">

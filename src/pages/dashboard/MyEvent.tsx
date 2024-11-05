@@ -2,10 +2,7 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
-import {
-  useDeleteEventMutation,
-  useGetHostEventByIdQuery,
-} from "../../redux/api/eventApi";
+import { useGetHostEventByIdQuery } from "../../redux/api/eventApi";
 import f10 from "../../assets/images/f10.png";
 import toast from "react-hot-toast";
 import { setUpdateStatus } from "../../features/eventSlice";
@@ -21,9 +18,9 @@ interface Event {
   ticketCategories: { price: string }[];
 }
 
-interface EventResponse {
-  data: Event[];
-}
+// interface EventResponse {
+//   data: Event[];
+// }
 
 interface User {
   id: string;
@@ -107,7 +104,7 @@ const MyEvent: React.FC = () => {
                       ? `${process.env.REACT_APP_IMAGEURL}/${event.imgs[0]?.img}`
                       : f10
                   }
-                  alt="Event Image"
+                  alt="eventing"
                   onError={(e) => {
                     e.currentTarget.src = f10; // fallback if image fails to load
                   }}

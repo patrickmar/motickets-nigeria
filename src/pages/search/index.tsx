@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Card from "../../components/Card";
 import useFetch from "../../hooks/useFetch";
 import { useParams } from "react-router-dom";

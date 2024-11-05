@@ -6,7 +6,7 @@ import { QuillFormats } from "../../constant";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { customAlphabet } from "nanoid";
 import { useGetHostEventByIdQuery } from "../../redux/api/eventApi";
 import { setUpdateStatus } from "../../features/eventSlice";
@@ -14,10 +14,6 @@ import { Link } from "react-router-dom";
 
 interface User {
   id: string;
-}
-
-interface EventResponse {
-  data: Event[];
 }
 
 interface TicketCategory {
@@ -79,25 +75,6 @@ interface EventData {
   end: StartInfo[];
 }
 
-interface Event {
-  sn: string;
-  hostid: string;
-  title: string;
-  currency: string;
-  venue: string;
-  paystack_bearer: string;
-  event_cat: string;
-  des: string;
-  ticketCategories: TicketCategory[];
-  imgs: { img: string }[];
-  start: { date: string; time: string }[];
-  end: { date: string; time: string }[];
-  from_date: string;
-  from_time: string;
-  to_date: string;
-  to_time: string;
-}
-
 const EditEventForm: React.FC = () => {
   const { sn } = useParams<{ sn: string }>();
   const formats = QuillFormats;
@@ -108,7 +85,6 @@ const EditEventForm: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const user = useSelector(
@@ -524,7 +500,7 @@ const EditEventForm: React.FC = () => {
                     <div key={index} className="mr-2 mb-2 relative">
                       <img
                         src={image}
-                        alt={`Event Image ${index + 1}`}
+                        alt={`eventful-${index + 1}`}
                         className="h-24 w-24 object-cover border rounded-md"
                       />
                       <button
@@ -553,7 +529,7 @@ const EditEventForm: React.FC = () => {
                     <div key={index} className="mr-2 mb-2 relative">
                       <img
                         src={URL.createObjectURL(image)}
-                        alt={`Event Image ${index + 1}`}
+                        alt={`evently-${index + 1}`}
                         className="h-24 w-24 object-cover border rounded-md"
                       />
                       <button

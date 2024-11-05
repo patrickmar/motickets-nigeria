@@ -316,12 +316,12 @@ const ContactUs = () => {
                   </svg>
                 </dt>
                 <p className="text-white">
-                  Suite 110 <br />
-                  150 Midsummer Boulevard <br />
-                  Milton Keynes
+                  66 <br />
+                  Bode Thomas, Surulere <br />
+                  
                   <br></br>
-                  MK9 1FD <br />
-                  England
+                  Lagos <br />
+                  Nigeria
                 </p>
               </div>
             </dl>

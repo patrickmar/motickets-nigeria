@@ -66,7 +66,7 @@ const FinancialCard: React.FC<{ onViewReport: () => void }> = ({
                       ? `${process.env.REACT_APP_IMAGEURL}/${event.imgs[0]?.img}`
                       : f10
                   }
-                  alt="Event-blue"
+                  alt="vibes"
                   onError={(e) => {
                     e.currentTarget.src = f10; // fallback if image fails to load
                   }}

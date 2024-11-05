@@ -137,6 +137,7 @@ const HostProfile = () => {
         <div className="flex flex-col items-center -mt-20">
           <Link to="/dashboard/avatar_upload">
             <img
+              alt="bestthing"
               src={avatarUrl || default_avatar}
               className="w-40 h-40 border-4 border-white rounded-full"
             />

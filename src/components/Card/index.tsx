@@ -14,17 +14,15 @@ type Props = {
 };
 
 const Card = ({ data, loading, title }: Props) => {
-  
   const imageURL = process.env.REACT_APP_IMAGEURL;
   const navigate = useNavigate();
 
   const currency = data && getCurrency(data[0]);
-// const filteredData =  data.filter((item:any) =>
-// item.currency.includes('GBP')
-// );
+  // const filteredData =  data.filter((item:any) =>
+  // item.currency.includes('GBP')
+  // );
 
-
-// console.log(filteredData);
+  // console.log(filteredData);
   const SkItem = () => {
     return (
       <div className="skeletonItem mb-5">
@@ -56,7 +54,7 @@ const Card = ({ data, loading, title }: Props) => {
                       onClick={() => navigate(`/details/${item.slug}`)}
                     >
                       <div className="posterBlock">
-                        <Img src={posterUrl} />
+                        <Img src={posterUrl} alt="anotherone" />
                         <Tags data={getTags(item?.tags).slice(0, 2)} />
                       </div>
                       <div className="textBlock">

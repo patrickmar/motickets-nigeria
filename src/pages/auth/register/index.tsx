@@ -71,12 +71,12 @@ interface LoginError {
 const Register = (props: Props) => {
   // Move the United Kingdom to the first position
   const countriesList = Object.values(countries);
-  const ukIndex = countriesList.findIndex(
-    (country) => country.name === "United Kingdom"
+  const ngIndex = countriesList.findIndex(
+    (country) => country.name === "Nigeria"
   );
-  if (ukIndex !== -1) {
-    const [ukCountry] = countriesList.splice(ukIndex, 1);
-    countriesList.unshift(ukCountry);
+  if (ngIndex !== -1) {
+    const [ngCountry] = countriesList.splice(ngIndex, 1);
+    countriesList.unshift(ngCountry);
   }
 
   const navigate = useNavigate();
@@ -84,7 +84,7 @@ const Register = (props: Props) => {
   const [user, setUser] = useState({
     fullname: "",
     email: "",
-    country: "United Kingdom", // Set the default country to United Kingdom
+    country: "Nigeria", // Set the default country to United Kingdom
     password: "",
   });
   const { fullname, email, country, password } = user;

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { countries } from "../../constant";
+import { Link } from "react-router-dom";
 
 const DropdownCountry = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -41,6 +42,7 @@ const DropdownCountry = () => {
         <img
           src={`https://flagcdn.com/w320/ng.png`}
           className="h-5 w-5 rounded-full me-2"
+          alt="forallevent"
         />
         <span className="hidden sm:block">Nigeria (NG)</span>
         <svg
@@ -74,8 +76,8 @@ const DropdownCountry = () => {
         <ul className="flex flex-col gap-1 border-b border-stroke py-7 dark:border-black">
           {countries.map((item, i) => (
             <li key={i}>
-              <a
-                href={item.url}
+              <Link
+                to={item.url}
                 target="_blank"
                 className="flex px-6 py-2 text-customBlack items-center gap-2 text-sm font-medium duration-300 ease-in-out hover:bg-red-600 hover:text-white lg:text-base"
               >
@@ -83,9 +85,10 @@ const DropdownCountry = () => {
                 <img
                   src={`https://flagcdn.com/w320/${item.code.toLowerCase()}.png`}
                   className="h-5 w-5 rounded-full me-2"
+                  alt="country flag"
                 />
                 {item.name}
-              </a>
+              </Link>
             </li>
           ))}
         </ul>

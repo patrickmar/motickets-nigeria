@@ -14,16 +14,16 @@ export const currencies = [
   //   value: "€",
   // },
   {
-    name: "GBP",
-    value: "£",
+    name: "NG",
+    value: "₦",
   },
 ];
 
 export const countries = [
   {
-    name: "United Kingdom",
+    name: "Nigeria",
     url: "https://motickets.co.uk",
-    code: "GB",
+    code: "NG",
   },
   // {
   //   name: "United States",

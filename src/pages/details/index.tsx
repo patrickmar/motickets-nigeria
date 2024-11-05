@@ -1,8 +1,8 @@
 import { useParams } from "react-router-dom";
 import DetailsBanner from "../../components/DetailsBanner";
-import OtherOrganizerEvents from "../../components/OrganizerEvents";
+// import OtherOrganizerEvents from "../../components/OrganizerEvents";
 import Similar from "../../components/Similar";
-import Speakers from "../../components/Speakers";
+// import Speakers from "../../components/Speakers";
 import useFetch from "../../hooks/useFetch";
 
 type Props = {};
