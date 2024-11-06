@@ -14,7 +14,7 @@ export const currencies = [
   //   value: "€",
   // },
   {
-    name: "NG",
+    name: "NGN",
     value: "₦",
   },
 ];
