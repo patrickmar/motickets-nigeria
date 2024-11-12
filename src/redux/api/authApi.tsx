@@ -59,7 +59,7 @@ export const authApi = createApi({
             );
           }
 
-          dispatch(setUser(data));
+          // dispatch(setUser(data));
           // dispatch(setIsAuthenticated(true));
         } catch (error) {
           console.log(error);

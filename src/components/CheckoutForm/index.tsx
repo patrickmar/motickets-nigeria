@@ -1,26 +1,13 @@
-// @ts-nocheck
-import {
-  ChangeEvent,
-  FocusEvent,
-  FormEvent,
-  FormEventHandler,
-  useEffect,
-  useState,
-} from "react";
-import axios from "axios";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
-import { CountryCode, E164Number } from "libphonenumber-js";
-
-import { validationSchema } from "./validation";
-import { NumericFormat } from "react-number-format";
+import { PaystackButton } from "react-paystack";
+import { toast } from "react-toastify";
+import { v4 as uuidv4 } from "uuid";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrency, getCurrencyCode } from "../../utils/functions";
-import StripeCheckout from "react-stripe-checkout";
-// import usePost from '../../hooks/usePost';
-
-// import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { E164Number } from "libphonenumber-js";
+import { NumericFormat } from "react-number-format";
 
 type Props = {
   tickets: Array<any>;
@@ -41,16 +28,12 @@ interface ICheckoutForm {
   [key: string]: string | boolean;
 }
 
-interface IBoolean {
-  [key: string]: boolean;
-}
-
 const CheckoutForm = (props: Props) => {
   const { tickets, data, totalAmount, subTotal, totalbookingFee, vat } = props;
-  const defaultCountryCode = process.env.REACT_APP_COUNTRYCODE;
+
+  const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_KEY;
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
-  const baseUrl = process.env.REACT_APP_BASEURL;
-  const STRIPE_KEY = process.env.REACT_APP_STRIPE_KEY;
+
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -59,145 +42,81 @@ const CheckoutForm = (props: Props) => {
     userConsent: false,
     terms: false,
   };
+
   const [formData, setFormData] = useState<ICheckoutForm>(initialValues);
-  const [errors, setErrors] = useState<ICheckoutForm>(initialValues);
-  const [touched, setTouched] = useState<IBoolean>({
-    firstName: false,
-    lastName: false,
-    email: false,
-    phoneNo: false,
-    terms: false,
-  });
   const [disabled, setDisabled] = useState(true);
-  const [discount, setDiscount] = useState("");
-  const [ticketDatas, setTicketDatas] = useState("");
-  const { firstName, lastName, email, phoneNo, userConsent, terms } = formData;
-  const [stripeToken, setStripeToken] = useState(null);
   const navigate = useNavigate();
 
-  const onToken = (token: any) => {
-    setStripeToken(token);
-  };
+  const { firstName, lastName, email, phoneNo, terms } = formData;
   const currency = data && getCurrency(data);
   const currencycode = data && getCurrencyCode(data);
 
-  useEffect(() => {
-    const MakeRequest = async () => {
-      try {
-        //      const { data, loading } =  usePost(`/stripe/payment`, {
-        //       tokenId : stripeToken.id,
-        //       amount: totalAmount*100,
-        //       currency: currencycode
-        //  });
-        const res = await axios.post(`${baseUrl}/stripe/payment`, {
-          tokenId: stripeToken.id,
-          amount: totalAmount * 100,
-          currency: currencycode,
-        });
-
-        navigate("/success", {
-          state: {
-            stripeData: res.data,
-            tickets: tickets,
-            ticketData: ticketDatas,
-            data: { data, totalAmount, subTotal, totalbookingFee, vat },
-          },
-          replace: true,
-        });
-        //navigate("/success", res.data)
-      } catch (error) {}
-    };
-
-    stripeToken && MakeRequest();
-  }, [
-    stripeToken,
-    navigate,
-    baseUrl,
-    currencycode,
-    data,
-    subTotal,
-    ticketDatas,
-    tickets,
-    totalAmount,
-    totalbookingFee,
-    vat,
-  ]);
+  const handlePhoneChange = (value: E164Number | undefined) => {
+    setFormData((prevState) => ({
+      ...prevState,
+      phoneNo: value || "", // Set an empty string if value is undefined
+    }));
+  };
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      [e.target.name]:
-        e.target.name === "terms" || e.target.name === "userConsent"
-          ? e.target.checked
-          : e.target.value,
-    }));
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === "checkbox" ? checked : value,
+    });
   };
 
-  const handleChange = (value: E164Number) => {
-    setFormData((prevState) => ({
-      ...prevState,
-      phoneNo: value,
-    }));
-  };
-
-  const validate = () => {
-    validationSchema
-      .validate(formData, { abortEarly: false })
-      .then(() => {
-        setErrors(initialValues);
-      })
-      .catch((err: any) => {
-        const errs: ICheckoutForm = initialValues;
-        err.inner.forEach((error: any) => {
-          if (touched[error.path]) errs[error.path] = error.message;
-        });
-        setErrors(errs);
+  const onSuccess = () => {
+    try {
+      // Your success logic here, e.g., navigate to a success page
+      navigate("/success", {
+        state: {
+          tickets: tickets,
+          data: { data, totalAmount, subTotal, totalbookingFee, vat },
+        },
+        replace: true,
       });
-
-    validationSchema.isValid(formData).then((valid) => setDisabled(!valid));
-  };
-
-  const onFocus = (e: FocusEvent<HTMLInputElement>) => {
-    const { name } = e.target;
-    setTouched({ ...touched, [name]: true });
-  };
-
-  const onBlur = () => {
-    validate();
-  };
-
-  useEffect(() => {
-    validate();
-  }, [formData, validate]);
-
-  const onSubmit: FormEventHandler<HTMLFormElement> = async (
-    e: FormEvent<HTMLFormElement>
-  ) => {
-    e.preventDefault();
-    if (!terms) {
-      toast.error("Please accept the terms and conditions");
-    } else {
-      const ticketData = {
-        firstName,
-        lastName,
-        email,
-        phoneNo,
-        userConsent,
-        terms,
-        discount,
-        tickets,
-      };
-
-      setTicketDatas(ticketData);
+    } catch (error) {
+      console.error("Error in onSuccess callback:", error);
+      toast.error("An error occurred during payment success handling.");
     }
   };
 
-  const onDiscountChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setDiscount(e.target.value);
+  const onClose = () => {
+    try {
+      toast.error("Transaction was not completed, window closed.");
+    } catch (error) {
+      console.error("Error in onClose callback:", error);
+    }
   };
-  console.log(onDiscountChange);
-  const onDiscountClick = () => {};
-  console.log(onDiscountClick);
+  const paystackConfig = {
+    email: email,
+    amount: totalAmount * 100, // Paystack expects amount in kobo
+    publicKey: PAYSTACK_KEY || "",
+    onSuccess: () => {
+      try {
+        onSuccess();
+      } catch (error) {
+        console.error("Error during onSuccess:", error);
+      }
+    },
+    onClose: () => {
+      try {
+        onClose();
+      } catch (error) {
+        console.error("Error during onClose:", error);
+      }
+    },
+    currency: currencycode,
+    reference: uuidv4(),
+  };
+
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!terms) {
+      toast.error("Please accept the terms and conditions");
+    }
+  };
 
   return (
     <div className="mx-auto max-w-2xl px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
@@ -209,10 +128,6 @@ const CheckoutForm = (props: Props) => {
             </h2>
           </div>
           <div className="mt-10">
-            <h2 className="font-medium text-white text-lg">
-              Ticket information
-            </h2>
-
             <form onSubmit={onSubmit}>
               <div className="grid gap-6 mb-6 md:grid-cols-2 mt-4">
                 <div>
@@ -228,13 +143,8 @@ const CheckoutForm = (props: Props) => {
                     name="firstName"
                     value={firstName}
                     onChange={onChange}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
                     className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   />
-                  <small className="form-error">
-                    {touched?.firstName && errors?.firstName}
-                  </small>
                 </div>
                 <div>
                   <label
@@ -249,20 +159,15 @@ const CheckoutForm = (props: Props) => {
                     name="lastName"
                     value={lastName}
                     onChange={onChange}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
                     className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   />
-                  <small className="form-error">
-                    {touched?.lastName && errors?.lastName}
-                  </small>
                 </div>
                 <div>
                   <label
                     htmlFor="email"
                     className="block mb-2 text-sm font-medium text-white dark:text-white"
                   >
-                    Email Address
+                    Email
                   </label>
                   <input
                     type="email"
@@ -270,14 +175,10 @@ const CheckoutForm = (props: Props) => {
                     name="email"
                     value={email}
                     onChange={onChange}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
                     className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   />
-                  <small className="form-error">
-                    {touched?.email && errors?.email}
-                  </small>
                 </div>
+
                 <div>
                   <label
                     htmlFor="phoneNo"
@@ -286,138 +187,43 @@ const CheckoutForm = (props: Props) => {
                     Phone Number
                   </label>
                   <PhoneInput
-                    defaultCountry={defaultCountryCode as CountryCode}
-                    name="phoneNo"
-                    autoComplete="off"
-                    id="phoneNo"
-                    value={phoneNo}
-                    onFocus={onFocus}
-                    onChange={handleChange}
-                    onBlur={onBlur}
+                    international
+                    defaultCountry="NG"
+                    value={phoneNo as string}
+                    onChange={handlePhoneChange}
                     className="inputClass"
                   />
-                  <small className="form-error">
-                    {touched?.phoneNo && errors?.phoneNo}
-                  </small>
                 </div>
               </div>
-
               <div className="flex mb-6">
-                <div className="flex items-center h-5">
-                  <input
-                    id="terms"
-                    name="terms"
-                    type="checkbox"
-                    checked={terms}
-                    onFocus={onFocus}
-                    onChange={onChange}
-                    onBlur={onBlur}
-                    className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
-                <div className="ms-2 text-sm">
-                  <label
-                    htmlFor="terms"
-                    className="font-medium text-white dark:text-gray-300"
-                  >
-                    I accept the <Link to="/terms">terms and conditions</Link>
-                  </label>
-                  <p className="form-error">
-                    {touched?.terms && errors?.terms}
-                  </p>
-                </div>
-              </div>
-
-              {/* <div className="flex mb-6">
-                <div className="flex items-center h-5">
-                  <input
-                    id="userConsent"
-                    name="userConsent"
-                    type="checkbox"
-                    checked={userConsent}
-                    onFocus={onFocus}
-                    onChange={onChange}
-                    onBlur={onBlur}
-                    className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
-                <div className="ms-2 text-sm">
-                  <label
-                    htmlFor="userConsent"
-                    className="font-medium text-white dark:text-gray-300"
-                  >
-                    Create account with above information.
-                  </label>
-                </div>
-              </div> */}
-              <StripeCheckout
-                name="MoTickets "
-                image="https://moloyal.com/images/moticketsicon.png"
-                //  billingAddress
-                //  shippingAddress
-                currency={currencycode}
-                email={email}
-                description={`Your total amount is ${currency}${totalAmount}`}
-                amount={totalAmount * 100}
-                token={onToken}
-                stripeKey={STRIPE_KEY}
-              >
-                {" "}
-                <button
-                  type="submit"
-                  disabled={disabled}
-                  className={`${
-                    disabled ? "disabled" : ""
-                  } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
+                <input
+                  id="terms"
+                  name="terms"
+                  type="checkbox"
+                  checked={terms}
+                  onChange={onChange}
+                  className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <label
+                  htmlFor="terms"
+                  className="font-medium text-white ms-2 text-sm dark:text-gray-300"
                 >
-                  Pay &nbsp;
-                  <NumericFormat
-                    value={Number(totalAmount).toFixed(2)}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    prefix={`${currency}`}
-                  />
-                </button>
-              </StripeCheckout>
+                  I accept the <Link to="/terms">terms and conditions</Link>
+                </label>
+              </div>
+              <PaystackButton
+                {...paystackConfig}
+                className="text-white bg-blue-500 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
+              >
+                Proceed to Payment
+              </PaystackButton>
             </form>
           </div>
         </div>
+
         <div className="mt-10 lg:mt-0">
           <h2 className="text-lg font-medium text-white">Ticket summary</h2>
           <div className="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="px-4 py-6 sm:px-6">
-              {/* <form>
-                <label
-                  htmlFor="discount"
-                  className="block font-medium text-sm text-black1"
-                >
-                  Discount code
-                </label>
-                <div className="mt-1 flex abj">
-                  <input
-                    type="text"
-                    id="discount"
-                    name="discount"
-                    value={discount}
-                    onChange={onDiscountChange}
-                    className="block w-full p-2.5 rounded-md border border-gray-300 shadow-sm sm:text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={onDiscountClick}
-                    disabled={discount?.length == 0}
-                    className={`${
-                      discount?.length == 0
-                        ? "bg-gray-200 text-gray-600 disabled"
-                        : "bg-red-600 text-white"
-                    } rounded-md px-4 text-sm font-medium bie bmz bne bnq bog bok`}
-                  >
-                    Apply
-                  </button>
-                </div>
-              </form> */}
-            </div>
-
             <dl className="aby border-t border-gray-200 px-4 py-6 sm:px-6">
               {tickets.map((item, i) => (
                 <div className="flex items-center justify-between" key={i}>
@@ -486,35 +292,18 @@ const CheckoutForm = (props: Props) => {
               </div>
             </dl>
             <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-              <StripeCheckout
-                name="MoTickets"
-                image="https://moloyal.com/images/moticketsicon.png"
-                //  billingAddress
-                //  shippingAddress
-                currency={currencycode}
-                email={email}
-                description={`Your total amount is ${currency}${totalAmount}`}
-                amount={totalAmount * 100}
-                token={onToken}
-                stripeKey={STRIPE_KEY}
+              <PaystackButton
+                {...paystackConfig}
+                className="text-white bg-blue-500  hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center"
               >
-                {" "}
-                <button
-                  type="submit"
-                  disabled={disabled}
-                  className={`${
-                    disabled ? "disabled" : ""
-                  } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
-                >
-                  Pay &nbsp;
-                  <NumericFormat
-                    value={Number(totalAmount).toFixed(2)}
-                    displayType={"text"}
-                    thousandSeparator={true}
-                    prefix={`${currency}`}
-                  />
-                </button>
-              </StripeCheckout>
+                Proceed to Payment &nbsp;
+                <NumericFormat
+                  value={Number(totalAmount).toFixed(2)}
+                  displayType={"text"}
+                  thousandSeparator={true}
+                  prefix={`${currency}`}
+                />{" "}
+              </PaystackButton>
             </div>
           </div>
         </div>
