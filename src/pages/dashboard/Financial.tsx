@@ -1,6 +1,8 @@
 // FinancialTable.tsx
 import React from "react";
 
+
+
 const FinancialTable: React.FC = () => {
   return (
     <div className="tabular--wrapper">

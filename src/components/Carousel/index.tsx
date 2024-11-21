@@ -52,7 +52,7 @@ const Carousel = ({ data, loading, title }: Props) => {
   };
 
   return (
-    <div className="carousel">
+    <div className="carousel h-screen overflow-hidden">
       <ContentWrapper>
         {title && <div className="carouselTitle">{title}</div>}
         <BsFillArrowLeftCircleFill
@@ -77,7 +77,7 @@ const Carousel = ({ data, loading, title }: Props) => {
                 >
                   <div className="posterBlock">
                     <Img src={posterUrl} />
-                   <Tags data={getTags(item?.tags).slice(0, 2)} />
+                    <Tags data={getTags(item?.tags).slice(0, 2)} />
                   </div>
                   <div className="textBlock">
                     <span className="title">{item.title}</span>

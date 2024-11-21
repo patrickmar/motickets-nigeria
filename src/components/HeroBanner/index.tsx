@@ -4,6 +4,7 @@ import useFetch from "../../hooks/useFetch";
 import ContentWrapper from "../ContentWrapper";
 import Img from "../LazyLoadImage";
 import bg from "../../assets/images/moticket-bg2.png";
+import BannerBill from "./banner";
 
 type Props = {};
 const HeroBanner = (props: Props) => {
@@ -30,14 +31,16 @@ const HeroBanner = (props: Props) => {
   };
 
   return (
-    <div className="heroBanner">
+    <div className="heroBanner !bg-white">
       {!loading && (
         <div className="backdrop-img">
-          <Img src={background} />
+          {/* <Img src={background} /> */}
+          {/* <Img src={''} alt="banner" />  */}
+
+          <BannerBill />
         </div>
       )}
-
-      <div className="opacity-layer"></div>
+      {/* <div className="opacity-layer"></div> */}
       <ContentWrapper>
         <div className="heroBannerContent">
           <span className="title">Unlock the Fun.</span>

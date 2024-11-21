@@ -6,12 +6,12 @@ import "./styles.scss";
 import ContentWrapper from "../../components/ContentWrapper";
 import Img from "../../components/LazyLoadImage";
 import PosterFallback from "../../assets/images/no-poster.png";
-import Tags from "../Tags";
+// import Tags from "../Tags";
 import {
   convertHTMLCode,
   getCurrency,
   getCurrencyName,
-  getTags,
+  // getTags,
 } from "../../utils/functions";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -125,7 +125,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   //console.log(tickets);
   const currency = getCurrency(newData);
   const currencyName = getCurrencyName(newData);
-  const isButtonEnabled = tickets.some((item: any) => item.qty > 0); // Check if any qty is greater than 0 before button is enabled.
+  const isButtonEnabled = tickets.some((item: any) => item.qty > 0);
   console.log(currencyName);
   const increment = (index: number) => {
     const updatedCategories = [...tickets];
@@ -190,17 +190,17 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   };
 
   return (
-    <div className="detailsBanner">
+    <div className="detailsBanner  ">
       {!loading ? (
         <>
           {!!data && (
             <Fragment>
-              <div className="backdrop-img">
+              {/* <div className="">
                 <Img src={imageURL + newData?.imgs[0]?.img} />
-              </div>
+              </div> */}
               <div className="opacity-layer"></div>
               <ContentWrapper>
-                <div className="content">
+                <div className="content w-full h-full">
                   <div className="left">
                     {newData?.imgs[0]?.img ? (
                       <Img
@@ -241,15 +241,11 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                   </div>
 
                   <div className="right">
-                    <div className="title">{`${newData.title}`}</div>
+                    {/* <div className="title">{`${newData.title}`}</div>
                     <div className="subtitle">{newData.tagline}</div>
-                    <Tags data={getTags(newData?.tags)} />
-                    <div className="overview">
-                      <div className="heading">Description</div>
-                      <div className="description">
-                        {convertHTMLCode(newData?.des)}
-                      </div>
-                    </div>
+                    <Tags data={getTags(newData?.tags)} /> */}
+
+                    <div className="title text-[#25aae1] text-center p-8">{`${newData.title}`}</div>
 
                     <div className="info">
                       {eventInfo(newData).map((item: any, i: number) => {
@@ -278,6 +274,12 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                         );
                       })}
                     </div>
+                    <div className="overview">
+                      <div className="heading">Description</div>
+                      <div className="description">
+                        {convertHTMLCode(newData?.des)}
+                      </div>
+                    </div>
 
                     {/* {tags?.length > 0 && (
                       <div className="info">
@@ -304,7 +306,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                               Admission
                             </h2>
                           </div>
-                          <span className="text-sm font-small text-red-600  ">
+                          <span className="text-sm font-small p-4 text-red-600  ">
                             *includes booking fee
                           </span>
                           <div className="mt-8">
@@ -316,7 +318,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                                       display: "flex",
                                       alignItems: "center",
                                       justifyContent: "center",
-                                      color: "white",
+                                      color: "black",
                                     }}
                                   >
                                     Event is no longer available.
@@ -332,7 +334,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                                       {/* { item.qty} */}
                                       <div className="flex flex-1 flex-col">
                                         <div>
-                                          <div className="flex  items-center text-base font-medium text-white ">
+                                          <div className="flex px-4 items-center text-base font-medium text-gray-600 ">
                                             <h3 className="w-28 ">
                                               {item.name}
                                             </h3>
@@ -341,7 +343,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                                             <form className="max-w-xs mx-auto">
                                               <label
                                                 htmlFor="quantity"
-                                                className="block text-sm font-medium text-white dark:text-white"
+                                                className="block text-sm font-medium  text-gray-600 dark:text-white"
                                               ></label>
                                               {item.issued_qty <= 0 ? (
                                                 <div className="">
@@ -364,7 +366,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                                                       onClick={() =>
                                                         decrement(index)
                                                       }
-                                                      className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-red-700 border border-gray-200 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
+                                                      className="bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-red-700 border border-gray-200 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
                                                     >
                                                       <svg
                                                         className="w-3 h-3 text-gray-900 dark:text-white"
@@ -397,7 +399,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                                                       onClick={() =>
                                                         increment(index)
                                                       }
-                                                      className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-blue-700 border border-gray-100 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
+                                                      className="bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-blue-700 border border-gray-100 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
                                                     >
                                                       <svg
                                                         className="w-3 h-3 text-gray-900 dark:text-white"
@@ -451,14 +453,14 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                           </div>
                         </div>
 
-                        <div className="border-t border-gray-200 py-6">
+                        <div className="border-t border-gray-200 py-6 px-4">
                           <div className="mt-6">
                             <button
                               onClick={goToCheckout}
                               disabled={!isButtonEnabled}
                               className={`${
                                 !isButtonEnabled ? "disabled" : ""
-                              } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
+                              } flex w-full items-center justify-center  rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
                             >
                               Buy Tickets
                             </button>

@@ -24,16 +24,24 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  scroll-behavior: smooth;
 }
 
-body {
-  // @apply bg-blackBg-500;
-  background-color: var(--black);
-  overflow-y: scroll;
+// body {
+//   // @apply bg-blackBg-500;
+//   background-color: var(--black);
+//   overflow-y: scroll;
+// }
+
+/* Enable smooth scrolling on the entire page */
+html {
+  scroll-behavior: smooth; /* Smooth scrolling for the whole page */
 }
 
+/* Customize the scrollbar */
 ::-webkit-scrollbar {
-  display: none;
+  width: 12px; /* Width of the vertical scrollbar */
+  height: 12px; /* Height of the horizontal scrollbar */
 }
 
 .skeleton {
@@ -55,7 +63,7 @@ body {
       rgba(#193763, 0)
     );
     animation: shimmer 2s infinite;
-    content: '';
+    content: "";
   }
 
   @keyframes shimmer {
@@ -85,7 +93,7 @@ body {
 }
 
 .background-image-container {
-  background-image: url('https://images.unsplash.com/photo-1546514714-df0ccc50d7bf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=667&q=80');
+  background-image: url("https://images.unsplash.com/photo-1546514714-df0ccc50d7bf?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=667&q=80");
   background-size: cover; /* Adjust to cover the entire container */
   background-position: center; /* Center the image */
 }

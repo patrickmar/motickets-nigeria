@@ -362,7 +362,7 @@ const EditEventForm: React.FC = () => {
           lastModified: selectedImages[i].lastModified,
         });
         formData.append("banner[]", banner);
-        console.log(`Renamed Image: ${banner.name}`);
+        // console.log(`Renamed Image: ${banner.name}`);
       }
 
       const logObject: { [key: string]: any } = {};
@@ -376,7 +376,7 @@ const EditEventForm: React.FC = () => {
           logObject[key] = value;
         }
       });
-      console.log(logObject);
+      // console.log(logObject);
 
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/update/eventticket/${sn}`,
@@ -389,9 +389,9 @@ const EditEventForm: React.FC = () => {
       if (!response.ok) {
         throw new Error("Fail to update event");
       }
-      console.log(response);
+      // console.log(response);
       const data = await response.json();
-      console.log(data);
+      // console.log(data);
 
       if (data.error === false) {
         toast.success(data.message);

@@ -30,13 +30,13 @@ const Footer = (props: Props) => {
     }
   };
   return (
-    <footer className="bg-blackBg-500 w-full">
+    <footer className="bg-gray-200 w-full">
       <div className="w-full max-w-[1200px] py-10 px-4 sm:px-6 lg:px-8 lg:pt-20 mx-auto">
         {/* Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
           <div className="col-span-full lg:col-span-1 lg:-mt-[18px]">
             <Link
-              className="flex-none text-xl font-semibold text-white dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+              className="flex-none text-xl font-semibold text-gray-900 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
               to="#"
               aria-label="Brand"
             >
@@ -46,13 +46,13 @@ const Footer = (props: Props) => {
           {/* End Col */}
 
           <div className="col-span-1">
-            <h4 className="font-semibold text-gray-100">FOR GUESTS</h4>
+            <h4 className="font-semibold text-gray-900">FOR GUESTS</h4>
 
             <div className="mt-3 grid space-y-3">
               {guests.map((item, i) => (
                 <p key={i}>
                   <Link
-                    className="inline-flex gap-x-2 text-gray-400 hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className="inline-flex gap-x-2 text-gray-700 hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                     to={item.url}
                   >
                     {item.name}
@@ -64,12 +64,12 @@ const Footer = (props: Props) => {
           {/* End Col */}
 
           <div className="col-span-1">
-            <h4 className="font-semibold text-gray-100">FOR HOSTS</h4>
+            <h4 className="font-semibold text-gray-900">FOR HOSTS</h4>
             <div className="mt-3 grid space-y-3">
               {hosts.map((item, i) => (
                 <p key={i}>
                   <Link
-                    className="inline-flex gap-x-2 text-gray-400 hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className="inline-flex gap-x-2 text-gray-700 hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                     to={item.url}
                   >
                     {item.name}
@@ -81,12 +81,12 @@ const Footer = (props: Props) => {
           {/* End Col */}
 
           <div className="col-span-1">
-            <h4 className="font-semibold text-gray-100">COMPANY</h4>
+            <h4 className="font-semibold text-gray-900">COMPANY</h4>
             <div className="mt-3 grid space-y-3">
               {company.map((item, i) => (
                 <p key={i}>
                   <Link
-                    className="inline-flex gap-x-2 text-gray-400 hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                    className="inline-flex gap-x-2 text-gray-700 hover:text-gray-200 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                     to={item.url}
                   >
                     {item.name}
@@ -98,7 +98,7 @@ const Footer = (props: Props) => {
           {/* End Col */}
 
           <div className="col-span-2">
-            <h4 className="font-semibold text-gray-100">SUBSCRIPTION</h4>
+            <h4 className="font-semibold text-gray-900">SUBSCRIPTION</h4>
 
             <form>
               <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:gap-3 bg-white rounded-lg p-2 dark:bg-gray-800">
@@ -124,7 +124,7 @@ const Footer = (props: Props) => {
                   Subscribe
                 </button>
               </div>
-              <p className="mt-3 text-sm text-gray-400">
+              <p className="mt-3 text-sm text-gray-700">
                 Subscribe to get notified when we publish new tickets.
               </p>
             </form>
@@ -135,7 +135,7 @@ const Footer = (props: Props) => {
 
         <div className="mt-5 sm:mt-12 grid gap-y-2 sm:gap-y-0 sm:flex sm:justify-between sm:items-center">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-900">
               © {moment().format("YYYY")} MoLoyal. All rights reserved.
             </p>
           </div>

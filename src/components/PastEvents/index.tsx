@@ -6,10 +6,12 @@ import useFetch from "../../hooks/useFetch";
 
 const PastEvent = () => {
   const currency = process.env.REACT_APP_CURRENCY;
-  const [endpoint, setEndpoint] = useState(`/pasteventspercurrency/${currency}`);
+  const [endpoint, setEndpoint] = useState(
+    `/pasteventspercurrency/${currency}`
+  );
   //const { data, loading } = useFetch(`/eventspercategory/${endpoint}`);
   const { data, loading } = useFetch(endpoint);
-console.log(data);
+  console.log(data);
   const onTabChange = (tab: string) => {
     // setEndpoint(tab === "Weekly" ? "weekly" : "monthly");
     setEndpoint(tab === "This Week" ? endpoint : endpoint);
@@ -18,9 +20,9 @@ console.log(data);
   //const PastEventData = data?.data.slice(0).reverse(); //slice(-5)
 
   return (
-    <div className="carouselSection">
+    <div className="carouselSection  h-screen overflow-hidden">
       <ContentWrapper>
-        <span className="carouselTitle">Past Events</span>
+        {/* <span className="carouselTitle">Past Events</span> */}
         <SwitchTabs
           data={["This Week", "This Month"]}
           onTabChange={onTabChange}

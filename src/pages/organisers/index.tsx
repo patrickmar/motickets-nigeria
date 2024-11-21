@@ -17,11 +17,11 @@ import { FaMailBulk } from "react-icons/fa";
 
 function Organisers() {
   return (
-    <div className=" blur-3.5">
+    <div className="bg-gray-100">
       {/* <Navbar /> */}
       {/* Banner section */}
       <section
-        className="bg-[#0A0D36] lg:h-[721px]"
+        className="lg:h-[721px] bg-gray-100"
         style={{
           backgroundImage: `url('https://res.cloudinary.com/djhz5a2ba/image/upload/v1706870766/f2ugvbcviq7bxwirmiek.png')`,
           backgroundSize: "cover",
@@ -65,7 +65,7 @@ function Organisers() {
             <img
               src={live}
               alt="hero "
-              className="w-full h-full rounded-[50px] border-[#000000] border-8"
+              className="w-full h-full rounded-[50px]  border-8"
             />
           </div>
         </div>
@@ -74,7 +74,7 @@ function Organisers() {
       {/* custom */}
       <section
         id="create"
-        className="pt-20 lg:pt-[120px] pb-12 lg:pb-[90px] relative z-20 overflow-hidden  bg-[#0A0D36]"
+        className="pt-20 lg:pt-[120px] pb-12 lg:pb-[90px] relative z-20 overflow-hidden bg-gray-100 "
       >
         <div className="">
           <div className="flex flex-wrap px-4">
@@ -86,7 +86,7 @@ function Organisers() {
                 text-3xl
                 sm:text-4xl
                 md:text-[40px]
-                text-white
+                text-[#25aae1]
                 mb-4
                 "
                 >
@@ -222,9 +222,9 @@ function Organisers() {
         </div>
       </section>
       {/* Testimonial */}
-      <div id="flexible" className="container  mx-auto md:px-6 bg-[#0A0D36]">
+      <div id="flexible" className="container  mx-auto md:px-6 bg-gray-100">
         <div className="mb-32 text-center">
-          <h2 className="mb-12 text-3xl font-bold text-white">
+          <h2 className="mb-12 text-3xl font-bold text-[#25aae1]">
             Flexible, Secured Payments
           </h2>
 
@@ -240,7 +240,7 @@ function Organisers() {
               <h5 className="mb-2 text-lg font-bold text-[#25aae1]">
                 Flexible Payment Choices
               </h5>
-              <h6 className="mb-4 font-medium text-white dark:text-primary-400 ">
+              <h6 className="mb-4 font-medium text-gray-900 dark:text-primary-400 ">
                 Customers can choose from various card types and use Google Pay,
                 Apple Pay, and Paypal for payments.
               </h6>
@@ -256,7 +256,7 @@ function Organisers() {
               <h5 className="mb-2 text-lg font-bold text-[#25aae1]">
                 Secured Payments
               </h5>
-              <h6 className="mb-4 font-medium text-white dark:text-primary-400 ">
+              <h6 className="mb-4 font-medium text-gray-900 dark:text-primary-400 ">
                 We've partnered with Stripe for secure payment processing,
                 ensuring confidential and security at every step.
               </h6>
@@ -272,7 +272,7 @@ function Organisers() {
               <h5 className="mb-2 text-lg font-bold text-[#25aae1]">
                 Effortless Checkout Options
               </h5>
-              <h6 className="mb-4 font-medium text-white dark:text-primary-400 ">
+              <h6 className="mb-4 font-medium text-gray-900 dark:text-primary-400 ">
                 One-Click for returning customers, guest checkout for
                 first-timers.
               </h6>
@@ -284,7 +284,7 @@ function Organisers() {
       {/* Reward */}
       <section
         id="reward"
-        className="flex md:flex-row flex-col md:py-16  py-6  md:-mt-[130px] items-center justify-center bg-[#0A0D36]"
+        className="flex md:flex-row flex-col md:py-16  py-6  md:-mt-[130px] items-center justify-center bg-gray-100"
       >
         <div className="flex justify-center  border-4 border-gray-600 rounded-[50px] w-[350px] ml-12 h-[500px] mx-uto bg-white ">
           <div className=" flex flex-col ">
@@ -322,10 +322,10 @@ function Organisers() {
 
       <div
         id="moticketsapp"
-        className="container  mx-auto md:px-6 md:py-24 bg-[#0A0D36] mb-4 "
+        className="container  mx-auto md:px-6 md:py-24 bg-gray-100 mb-4 "
       >
         <div className="flex justify-center items-center">
-          <h2 className="mb-12 text-3xl font-bold text-white">
+          <h2 className="mb-12 text-3xl font-bold text-[#25aae1]">
             MoTicket Agent App
           </h2>
         </div>
@@ -342,7 +342,7 @@ function Organisers() {
               <h5 className="mb-2 text-lg font-bold text-[#25aae1]">
                 Ticket Holder Verification
               </h5>
-              <h6 className="mb-4 font-medium text-white dark:text-primary-400 ">
+              <h6 className="mb-4 font-medium text-gray-900 dark:text-primary-400 ">
                 Never struggle with scanning tickets again! Easily verify ticket
                 holders using their phone number or email address.
               </h6>
@@ -358,7 +358,7 @@ function Organisers() {
               <h5 className="mb-2 text-lg font-bold text-[#25aae1]">
                 Ticket Validation
               </h5>
-              <h6 className="mb-4 font-medium text-white dark:text-primary-400">
+              <h6 className="mb-4 font-medium text-gray-900 dark:text-primary-400">
                 Effortlessly check-in guests at events using our Agent App.
               </h6>
             </div>
@@ -373,7 +373,7 @@ function Organisers() {
               <h5 className="mb-2 text-lg font-bold text-[#25aae1]">
                 Door Sale Made Simple
               </h5>
-              <h6 className="mb-4 font-medium text-white dark:text-primary-400">
+              <h6 className="mb-4 font-medium text-gray-900 dark:text-primary-400">
                 Use our Agent App to sell tickets on-site with ease
               </h6>
             </div>
@@ -381,7 +381,7 @@ function Organisers() {
         </section>
         <div className="container mx-auto flex flex-col justify-around p-4 text-center  lg:flex-row">
           <div className="flex flex-col justify-center lg:text-left">
-            <h1 className="py-2 text-3xl font-medium leadi title-font text-white">
+            <h1 className="py-2 text-3xl font-medium leadi title-font text-gray-900">
               Download the Moloyal Agent App here
             </h1>
           </div>
@@ -414,10 +414,10 @@ function Organisers() {
       {/* Pricing */}
       <div
         id="analytics"
-        className="container -mt-14 mx-auto md:px-6 bg-[#0A0D36] py-24"
+        className="container -mt-14 mx-auto md:px-6 bg-gray-100 py-24"
       >
         <div className="">
-          <h2 className="mb-12 -mt-16 text-center text-3xl font-bold text-white">
+          <h2 className="mb-12 -mt-16 text-center text-3xl font-bold text-gray-900">
             Pricing
           </h2>
 

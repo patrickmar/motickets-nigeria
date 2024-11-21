@@ -396,7 +396,7 @@ const CreateEventForm: React.FC = () => {
           lastModified: selectedImages[i].lastModified,
         });
         formData.append("banner[]", banner);
-        console.log(`Renamed Image: ${banner.name}`);
+        // console.log(`Renamed Image: ${banner.name}`);
       }
 
       // Create an object to log
@@ -411,7 +411,7 @@ const CreateEventForm: React.FC = () => {
           logObject[key] = value;
         }
       });
-      console.log(logObject);
+      // console.log(logObject);
 
       const response = await fetch(BaseUrl, {
         method: "POST",
@@ -467,8 +467,8 @@ const CreateEventForm: React.FC = () => {
 
   return (
     <div className="flex items-center justify-center">
-      <div className="bg-gray-300/10 p-8 rounded shadow-lg w-4/5 lg:w-3/5 mt-24">
-        <h2 className="text-2xl font-semibold mb-4 text-white">Create Event</h2>
+      <div className="bg-gray-100 p-8 rounded shadow-lg w-4/5 lg:w-3/5 mt-24">
+        <h2 className="text-2xl font-semibold mb-4 text-[#25aae1]">Create Event</h2>
         <form onSubmit={handleSubmit}>
           {step === 1 && (
             <>
@@ -480,7 +480,7 @@ const CreateEventForm: React.FC = () => {
                   type="text"
                   id="eventTitle"
                   name="eventTitle"
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 bg-white border rounded-md focus:outline-none focus:border-blue-500"
                   value={eventData.eventTitle}
                   onChange={handleChange}
                   required
@@ -495,7 +495,7 @@ const CreateEventForm: React.FC = () => {
                   type="text"
                   id="venue"
                   name="venue"
-                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 bg-white border rounded-md focus:outline-none focus:border-blue-500"
                   value={eventData.venue}
                   onChange={handleChange}
                   required
@@ -519,7 +519,7 @@ const CreateEventForm: React.FC = () => {
                       id="banner"
                       name="banner"
                       accept="image/*"
-                      className="hidden"
+                      className="hidden bg-white"
                       onChange={(e) => handleNewImageChange(e.target.files)}
                       ref={fileInputRef}
                       multiple
@@ -573,7 +573,7 @@ const CreateEventForm: React.FC = () => {
               {/* Add information tooltip or modal */}
               {showInformation && (
                 <div className="bg-white p-4 border rounded-md">
-                  <p className=" italic text-blue-400">
+                  <p className=" italic text-gray-600">
                     Event graphics preferably include dimensions (220 by 330 px)
                     and (500 by 550 px) but any size provided may be resized to
                     fit. Supported formats are jpg, jpeg, png, gif.
@@ -676,7 +676,7 @@ const CreateEventForm: React.FC = () => {
               <div className="mb-4" data-name="description">
                 <label
                   htmlFor="description"
-                  className="block mb-2 text-sm font-medium text-white "
+                  className="block mb-2 text-sm font-medium text-[#25aae1] "
                 >
                   Description
                 </label>
@@ -684,7 +684,7 @@ const CreateEventForm: React.FC = () => {
                   formats={formats}
                   value={eventData.description}
                   onChange={handleDescriptionChange}
-                  className="add-new-post__editor mb-1 text-white"
+                  className="add-new-post__editor mb-1 text-gray-900 bg-white"
                   theme="snow"
                 />
                 <p className="text-xs text-gray-400">
@@ -737,7 +737,7 @@ const CreateEventForm: React.FC = () => {
                 <div className="flex-1">
                   <label
                     htmlFor="bearer"
-                    className="block mb-2 text-sm font-medium text-gray-900"
+                    className="block mb-2 text-sm font-medium text-[#25aae1]"
                   >
                     Charge Bearer
                   </label>
@@ -762,7 +762,7 @@ const CreateEventForm: React.FC = () => {
                 <div className="flex-1">
                   <label
                     htmlFor="currency"
-                    className="block mb-2 text-sm font-medium text-gray-900"
+                    className="block mb-2 text-sm font-medium text-[#25aae1]"
                   >
                     Currency
                   </label>
@@ -782,7 +782,7 @@ const CreateEventForm: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="text-xl font-semibold mb-4 text-white">
+              <h3 className="text-xl font-semibold mb-4 text-[#25aae1]">
                 Ticket Categories
               </h3>
               <div className="overflow-x-auto">
