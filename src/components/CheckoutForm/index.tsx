@@ -31,7 +31,7 @@ interface ICheckoutForm {
 const CheckoutForm = (props: Props) => {
   const { tickets, data, totalAmount, subTotal, totalbookingFee, vat } = props;
 
-  const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_KEY;
+  const PAYSTACK_KEY = "pk_test_fb0ce109fe7f1e851ddf454110f04af9b3154e14";
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
 
   const initialValues = {
@@ -54,7 +54,7 @@ const CheckoutForm = (props: Props) => {
   const handlePhoneChange = (value: E164Number | undefined) => {
     setFormData((prevState) => ({
       ...prevState,
-      phoneNo: value || "", // Set an empty string if value is undefined
+      phoneNo: value || "",
     }));
   };
 
@@ -66,19 +66,26 @@ const CheckoutForm = (props: Props) => {
     });
   };
 
+  const handleError = (error: any) => {
+    console.error("Error object:", error); // Full error object
+    if (error instanceof Error) return error.message;
+    if (typeof error === "object" && error !== null)
+      return JSON.stringify(error, null, 2);
+    return String(error);
+  };
+
   const onSuccess = () => {
     try {
-      // Your success logic here, e.g., navigate to a success page
       navigate("/success", {
         state: {
-          tickets: tickets,
+          tickets: tickets || [],
           data: { data, totalAmount, subTotal, totalbookingFee, vat },
         },
         replace: true,
       });
     } catch (error) {
-      console.error("Error in onSuccess callback:", error);
-      toast.error("An error occurred during payment success handling.");
+      console.error("onSuccess Error:", error);
+      toast.error(handleError(error));
     }
   };
 
@@ -86,28 +93,18 @@ const CheckoutForm = (props: Props) => {
     try {
       toast.error("Transaction was not completed, window closed.");
     } catch (error) {
-      console.error("Error in onClose callback:", error);
+      console.error("onClose Error:", error);
+      toast.error(handleError(error));
     }
   };
+
   const paystackConfig = {
     email: email,
-    amount: totalAmount * 100, // Paystack expects amount in kobo
+    amount: Math.round(totalAmount * 100),
     publicKey: PAYSTACK_KEY || "",
-    onSuccess: () => {
-      try {
-        onSuccess();
-      } catch (error) {
-        console.error("Error during onSuccess:", error);
-      }
-    },
-    onClose: () => {
-      try {
-        onClose();
-      } catch (error) {
-        console.error("Error during onClose:", error);
-      }
-    },
-    currency: currencycode,
+    onSuccess: onSuccess,
+    onClose: onClose,
+    currency: currencycode || "NGN",
     reference: uuidv4(),
   };
 
@@ -115,17 +112,22 @@ const CheckoutForm = (props: Props) => {
     e.preventDefault();
     if (!terms) {
       toast.error("Please accept the terms and conditions");
+      return;
+    }
+    try {
+      setDisabled(false);
+    } catch (error: any) {
+      console.error("Submission error:", error);
+      toast.error(error.message || JSON.stringify(error));
     }
   };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
+    <div className="mx-auto max-w-2xl bg-gray-100 px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
       <div className="xl:gap-x-16 lg:gap-x-12 lg:grid-cols-2 grid max-w-[1200px]">
         <div>
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white dark:text-white">
-              Checkout
-            </h2>
+            <h2 className="text-2xl font-bold text-gray-900">Checkout</h2>
           </div>
           <div className="mt-10">
             <form onSubmit={onSubmit}>
@@ -133,7 +135,7 @@ const CheckoutForm = (props: Props) => {
                 <div>
                   <label
                     htmlFor="firstName"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+                    className="block mb-2 text-sm font-medium text-gray-900"
                   >
                     First Name
                   </label>
@@ -143,13 +145,13 @@ const CheckoutForm = (props: Props) => {
                     name="firstName"
                     value={firstName}
                     onChange={onChange}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="bg-white border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="lastName"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+                    className="block mb-2 text-sm font-medium text-gray-900"
                   >
                     Last Name
                   </label>
@@ -159,13 +161,13 @@ const CheckoutForm = (props: Props) => {
                     name="lastName"
                     value={lastName}
                     onChange={onChange}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="bg-white border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                   />
                 </div>
                 <div>
                   <label
                     htmlFor="email"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+                    className="block mb-2 text-sm font-medium text-gray-900"
                   >
                     Email
                   </label>
@@ -175,14 +177,13 @@ const CheckoutForm = (props: Props) => {
                     name="email"
                     value={email}
                     onChange={onChange}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="bg-white border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                   />
                 </div>
-
                 <div>
                   <label
                     htmlFor="phoneNo"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+                    className="block mb-2 text-sm font-medium text-gray-900"
                   >
                     Phone Number
                   </label>
@@ -191,7 +192,6 @@ const CheckoutForm = (props: Props) => {
                     defaultCountry="NG"
                     value={phoneNo as string}
                     onChange={handlePhoneChange}
-                    className="inputClass"
                   />
                 </div>
               </div>
@@ -202,11 +202,11 @@ const CheckoutForm = (props: Props) => {
                   type="checkbox"
                   checked={terms}
                   onChange={onChange}
-                  className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                  className="w-4 h-4 text-red-600 bg-white border-gray-300 rounded focus:ring-red-600"
                 />
                 <label
                   htmlFor="terms"
-                  className="font-medium text-white ms-2 text-sm dark:text-gray-300"
+                  className="font-medium text-gray-900 ms-2 text-sm"
                 >
                   I accept the <Link to="/terms">terms and conditions</Link>
                 </label>
@@ -220,11 +220,10 @@ const CheckoutForm = (props: Props) => {
             </form>
           </div>
         </div>
-
         <div className="mt-10 lg:mt-0">
           <h2 className="text-lg font-medium text-white">Ticket summary</h2>
           <div className="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
-            <dl className="aby border-t border-gray-200 px-4 py-6 sm:px-6">
+            <dl className="border-t border-gray-200 px-4 py-6 sm:px-6">
               {tickets.map((item, i) => (
                 <div className="flex items-center justify-between" key={i}>
                   <dt className="text-base text-customBlack">{`${item?.qty} * ${item?.name}`}</dt>
@@ -238,7 +237,6 @@ const CheckoutForm = (props: Props) => {
                   </dd>
                 </div>
               ))}
-
               <div className="flex items-center justify-between">
                 <dt className="text-base text-red-600">Subtotal</dt>
                 <dd className="text-base font-medium text-red-600">
@@ -261,7 +259,6 @@ const CheckoutForm = (props: Props) => {
                   />
                 </dd>
               </div>
-
               <div className="flex items-center justify-between">
                 <dt className="text-base text-customBlack">
                   VAT
@@ -278,7 +275,6 @@ const CheckoutForm = (props: Props) => {
                   />
                 </dd>
               </div>
-
               <div className="flex items-center justify-between border-t border-gray-200 pt-6">
                 <dt className="text-lg text-red-600 font-bold">Total</dt>
                 <dd className="text-base font-bold text-red-600">

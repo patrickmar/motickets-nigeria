@@ -31,7 +31,7 @@ const HeroBanner = (props: Props) => {
   };
 
   return (
-    <div className="heroBanner !bg-white">
+    <div className="heroBanner ">
       {!loading && (
         <div className="backdrop-img">
           {/* <Img src={background} /> */}

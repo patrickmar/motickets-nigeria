@@ -171,18 +171,18 @@ const HostLayer: React.FC = () => {
   }
 
   return (
-    <div className="py-32  lg:mx-32 mx-2 bg-gray-300/10 p-8 rounded-md ">
+    <div className="py-32  lg:mx-32 mx-2 bg-gray-300 p-8 rounded-md ">
       <form onSubmit={handleSubmit}>
         {currentStep === 1 && (
           <div className="space-y-12">
             <div className="border-b border-gray-300/10 pb-12">
-              <h2 className="text-lg font-semibold leading-30.8 text-gray-100">
+              <h2 className="text-lg font-semibold leading-30.8 text-gray-900">
                 Create Host Account
               </h2>
-              <p className="mt-8 text-md leading-6 text-gray-100">
+              <p className="mt-8 text-md leading-6 text-gray-900">
                 Personal Details
               </p>
-              <p className="mt-1 text-sm leading-6 text-gray-100">
+              <p className="mt-1 text-sm leading-6 text-gray-900">
                 Your contact information is kept private and shown only to
                 attendees who book a ticket
               </p>
@@ -190,7 +190,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-4">
                   <label
                     htmlFor="username"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Enter host name *
                   </label>
@@ -213,7 +213,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-4">
                   <label
                     htmlFor="email"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Email address *
                   </label>
@@ -232,13 +232,13 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-2">
                   <label
                     htmlFor="phoneNo"
-                    className="block mb-2 text-sm font-medium text-gray-100"
+                    className="block mb-2 text-sm font-medium text-gray-900"
                   >
                     Phone Number *
                   </label>
                   <PhoneInput
                     international
-                    defaultCountry="GB"
+                    defaultCountry="NG"
                     value={formData.phone}
                     onChange={handlePhoneChange}
                     className="block w-full rounded-md border-gray-300 bg-transparent shadow-sm focus:ring-gray-100 focus:border-gray-100 sm:text-sm"
@@ -253,14 +253,14 @@ const HostLayer: React.FC = () => {
         {currentStep === 2 && (
           <div className="space-y-12">
             <div className="border-b border-gray-400/10 pb-12">
-              <h2 className="text-base font-semibold leading-7 text-gray-100">
+              <h2 className="text-base font-semibold leading-7 text-gray-900">
                 Other Information
               </h2>
               <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="facebook"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Facebook (Optional)
                   </label>
@@ -280,7 +280,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="twitter"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Twitter (Optional)
                   </label>
@@ -299,7 +299,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="instagram"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Instagram (Optional)
                   </label>
@@ -319,7 +319,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="website"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Website (Optional)
                   </label>
@@ -338,7 +338,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-6">
                   <label
                     htmlFor="about"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     About
                   </label>
@@ -364,14 +364,14 @@ const HostLayer: React.FC = () => {
         {currentStep === 3 && (
           <div className="space-y-12 ">
             <div className="border-b border-gray-900/10 pb-12">
-              <h2 className="text-base font-semibold leading-7 text-gray-100">
+              <h2 className="text-base font-semibold leading-7 text-gray-900">
                 Banking Details
               </h2>
               <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="bankCountry"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Bank Name *
                   </label>
@@ -391,7 +391,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="accountName"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Account Name *
                   </label>
@@ -411,7 +411,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="currency"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Currency *
                   </label>
@@ -438,9 +438,9 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="sortCode"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
-                    Sort Code *
+                    Zip Code *
                   </label>
                   <div className="mt-2">
                     <input
@@ -458,7 +458,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="accountNumber"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Account Number *
                   </label>
@@ -478,7 +478,7 @@ const HostLayer: React.FC = () => {
                 <div className="sm:col-span-3">
                   <label
                     htmlFor="confirmAccountNumber"
-                    className="block text-sm font-medium leading-6 text-gray-100"
+                    className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Confirm Account Number *
                   </label>
