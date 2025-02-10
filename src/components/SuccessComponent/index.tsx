@@ -1,40 +1,69 @@
-// @ts-nocheck
 import { useEffect, useState } from "react";
 import axios from "axios";
-import ContentWrapper from "../../components/ContentWrapper";
 import { NumericFormat } from "react-number-format";
-import { useNavigate } from "react-router-dom";
-import { getCurrency, getCurrencyCode } from "../../utils/functions";
+import { useLocation, useNavigate } from "react-router-dom";
+import { getCurrency } from "../../utils/functions";
 import "./styles.scss";
+import ContentWrapper from "../ContentWrapper";
 
-const SuccessComponent = ({ tickets, ticketData, data }) => {
+// Define types
+interface Ticket {
+  qty: number;
+  name: string;
+  price: number;
+}
+
+interface PaystackData {
+  email: string;
+  amount: number;
+  reference: string;
+  // Add any other Paystack-specific properties here
+}
+
+interface PaymentData {
+  subTotal: number;
+  totalbookingFee: number;
+  vat: number;
+  totalAmount: number;
+}
+
+interface Props {
+  tickets: Ticket[];
+  data: PaymentData;
+  ticketData: any; // Replace with more specific type if possible
+  paystackData: PaystackData; // Add paystackData to the Props type
+}
+
+const SuccessComponent: React.FC<Props> = ({ tickets, ticketData, data }) => {
+  const location = useLocation();
   const baseUrl = process.env.REACT_APP_BASEURL;
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
-  const [tick, setTick] = useState(tickets);
-  const [userData, setUserData] = useState(data);
-  const [tickData, setTickData] = useState(ticketData);
+  const navigate = useNavigate();
+  const paystack = location?.state?.paystackData;
+
+  const currency = data && getCurrency(data);
   const [validatePay, setValidatePay] = useState(false);
   const [loading, setLoading] = useState(true);
+  console.log("Paystack Data:", paystack); // Log to verify
 
-  const currency = data && getCurrency(data.data);
-  const navigate = useNavigate();
-
-  const resetState = () => {
-    setTick([]);
-    setUserData({});
-    setTickData([]);
-  };
+  console.log("Location State:", location.state);
 
   const MakeRequest = async () => {
+    // if (!paystack) {
+    //   console.error("No payment data found.");
+    //   return;
+    // }
+
     try {
-      setLoading(true); // Set loading state initially
+      setLoading(true);
       const res = await axios.post(`${baseUrl}/dispense/internationalticket`, {
-        userdata: userData,
-        ticketData: tickData,
-        myCart: tick,
+        userdata: data,
+        ticketData: ticketData,
+        myCart: tickets,
         paystackData: paystack,
       });
-  
+
+      console.log("Ticket Response:", res);
       if (res.data.error === false) {
         setValidatePay(true);
       } else {
@@ -44,13 +73,16 @@ const SuccessComponent = ({ tickets, ticketData, data }) => {
       console.error("Payment processing error:", error);
       alert("An error occurred while processing your payment.");
     } finally {
-      setLoading(false); // Always unset loading
-      resetState();
+      setLoading(false);
     }
   };
-  
-  
-  
+
+  useEffect(() => {
+    MakeRequest();
+  }, []);
+  console.log(data);
+  console.log(ticketData);
+
   return (
     <div className="detailsBanner">
       {!loading ? (

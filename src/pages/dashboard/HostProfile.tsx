@@ -94,7 +94,7 @@ const HostProfile = () => {
   const { data } = useGetHostQuery(user?.id!, {
     skip: !user?.id,
   });
-  console.log(data);
+  // console.log(data);
   const userData = data ? data[0] : null; // Get the first user
 
   useEffect(() => {

@@ -8,9 +8,15 @@ const Success = (props: Props) => {
   const tickets = location?.state?.tickets;
   const data = location?.state?.data;
   const ticketData = location?.state?.ticketData;
+  const paystackData = location?.state?.paystackData; // Extract paystackData
 
   return (
-    <SuccessComponent tickets={tickets} data={data} ticketData={ticketData} />
+    <SuccessComponent
+      tickets={tickets}
+      data={data}
+      ticketData={ticketData}
+      paystackData={paystackData}
+    />
   );
 };
 

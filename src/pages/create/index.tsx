@@ -459,8 +459,6 @@ const CreateEventForm: React.FC = () => {
     return `${paddedHours}:${paddedMinutes}:00`;
   };
 
-  console.log(formatTime);
-
   const handleInformationClick = () => {
     setShowInformation((prevShowInformation) => !prevShowInformation);
   };
@@ -468,7 +466,9 @@ const CreateEventForm: React.FC = () => {
   return (
     <div className="flex items-center justify-center">
       <div className="bg-gray-100 p-8 rounded shadow-lg w-4/5 lg:w-3/5 mt-24">
-        <h2 className="text-2xl font-semibold mb-4 text-[#25aae1]">Create Event</h2>
+        <h2 className="text-2xl font-semibold mb-4 text-[#25aae1]">
+          Create Event
+        </h2>
         <form onSubmit={handleSubmit}>
           {step === 1 && (
             <>

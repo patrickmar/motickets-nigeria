@@ -182,7 +182,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   };
 
   const goToCheckout = () => {
-    //console.log(tickets);
+    console.log(tickets);
     const { currency, title } = newData;
     navigate("/checkout", {
       state: { tickets: tickets, data: { currency, title } },
