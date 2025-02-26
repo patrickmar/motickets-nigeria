@@ -50,7 +50,7 @@ const CheckoutForm = (props: Props) => {
   const defaultCountryCode = process.env.REACT_APP_COUNTRYCODE;
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
   const baseUrl = process.env.REACT_APP_BASEURL;
-  const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_KEY;
+  const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_SECRET;
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -74,33 +74,12 @@ const CheckoutForm = (props: Props) => {
   const [discount, setDiscount] = useState("");
   const [ticketDatas, setTicketDatas] = useState("");
   const { firstName, lastName, email, phoneNo, userConsent, terms } = formData;
-  const [stripeToken, setStripeToken] = useState(null);
   const navigate = useNavigate();
 
-  const onToken = (token: any) => {
-    // console.log(token);
-    setStripeToken(token);
-  };
   const currency = data && getCurrency(data);
   const currencyName = data && getCurrencyName(data);
   const query = new URLSearchParams(window.location.search);
-
-  useEffect(() => {
-    // Check to see if this is a redirect back from Checkout
-    const customId = "toastid";
-
-    if (query.get("success")) {
-      toast.success("Order placed! You will receive an email confirmation.", {
-        toastId: customId,
-      });
-    }
-
-    if (query.get("canceled")) {
-      toast.error(
-        "Order canceled -- continue to shop around and checkout when you're ready."
-      );
-    }
-  }, [query]);
+  const amountInKobo = Math.round(Number(totalAmount) * 100);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevState) => ({
@@ -142,22 +121,43 @@ const CheckoutForm = (props: Props) => {
       return;
     }
 
-    try {
-      const payload = {
-        email,
-        amount: totalAmount * 100, // Convert to kobo (Paystack accepts in kobo)
-        currency: currencyName,
-      };
+    // Define the payload
+    const payload = {
+      email,
+      amount: totalAmount, // Corrected: Now in kobo
+      currency: currency || "NGN",
+      metadata: { firstName, lastName, phoneNo, userConsent },
+      callback_url: `${window.location.origin}/success`,
+    };
+    console.log("Payload Sent to Paystack:", payload); // Debugging log
+    console.log("Total Amount (NGN):", totalAmount);
+    console.log("Total Amount (NGN):", totalAmount);
 
+    try {
       const response = await axios.post(
-        `${baseUrl}/paystack/initialise_transaction`,
-        payload
+        // "https://api.paystack.co/transaction/initialize",
+        `${baseUrl}/transaction/initialize`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${PAYSTACK_KEY}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      // Redirect user to Paystack payment page
-      window.location.href = response.data.authorization_url;
+      console.log("Paystack Response:", response.data);
+
+      if (response.data.status) {
+        window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
+      } else {
+        throw new Error("Failed to generate Paystack authorization URL");
+      }
     } catch (error) {
-      console.error("Payment initiation failed:", error);
+      console.error(
+        "Payment initiation failed:",
+        error.response?.data || error
+      );
       toast.error("Something went wrong. Please try again.");
     }
   };
@@ -184,6 +184,28 @@ const CheckoutForm = (props: Props) => {
   };
 
   const onDiscountClick = () => {};
+
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+
+    if (query.get("success")) {
+      toast.success("Order placed! You will receive an email confirmation.");
+      navigate("/success"); // Navigate to success page
+    }
+
+    if (query.get("canceled")) {
+      toast.error("Order canceled. Please try again.");
+    }
+  }, [query, navigate]);
+
+  // useEffect(() => {
+  //   const query = new URLSearchParams(window.location.search);
+  //   const reference = query.get("reference");
+
+  //   if (reference) {
+  //     navigate("/success"); // Redirect to the success page
+  //   }
+  // }, [query, navigate]);
 
   return tickets ? (
     <div className="mx-auto max-w-2xl bg-gray-200 px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
@@ -352,7 +374,6 @@ const CheckoutForm = (props: Props) => {
                   prefix={`${currency}`}
                 />
               </button>
-              {/* </StripeCheckout> */}
             </form>
           </div>
         </div>
@@ -428,38 +449,7 @@ const CheckoutForm = (props: Props) => {
                 </dd>
               </div>
             </dl>
-            <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-              {/* <StripeCheckout
-       name = "MoTickets"
-       image = "https://moloyal.com/images/moticketsicon.png"
-      //  billingAddress
-      //  shippingAddress
-      currency={currencycode}
-      email={email}
-       description={`Your total amount is ${currency}${totalAmount}`}
-       amount={totalAmount*100}
-       token={onToken}
-      stripeKey={STRIPE_KEY}
-      >  */}
-
-              {/* <button
-                type="submit"
-                disabled={disabled}
-                className={`${
-                  disabled ? "disabled" : ""
-                } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-gray-800 shadow-sm hover:bg-red-700`}
-              >
-                Pay &nbsp;
-                <NumericFormat
-                  value={Number(totalAmount).toFixed(2)}
-                  displayType={"text"}
-                  thousandSeparator={true}
-                  prefix={`${currency}`}
-                />
-              </button> */}
-
-              {/* </StripeCheckout> */}
-            </div>
+            <div className="border-t border-gray-200 px-4 py-6 sm:px-6"></div>
           </div>
         </div>
       </div>

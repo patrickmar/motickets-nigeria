@@ -1,12 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { NumericFormat } from "react-number-format";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getCurrency } from "../../utils/functions";
 import "./styles.scss";
 import ContentWrapper from "../ContentWrapper";
+import { toast } from "react-toastify";
 
-// Define types
 interface Ticket {
   qty: number;
   name: string;
@@ -17,7 +17,6 @@ interface PaystackData {
   email: string;
   amount: number;
   reference: string;
-  // Add any other Paystack-specific properties here
 }
 
 interface PaymentData {
@@ -30,186 +29,180 @@ interface PaymentData {
 interface Props {
   tickets: Ticket[];
   data: PaymentData;
-  ticketData: any; // Replace with more specific type if possible
-  paystackData: PaystackData; // Add paystackData to the Props type
+  ticketData: any;
+  paystackData: PaystackData;
 }
 
-const SuccessComponent: React.FC<Props> = ({ tickets, ticketData, data }) => {
+const PAYSTACK_SECRET_KEY = process.env.REACT_APP_PAYSTACK_SECRET;
+
+const SuccessComponent: React.FC<Props> = ({
+  tickets,
+  ticketData,
+  data,
+  paystackData,
+}) => {
   const location = useLocation();
   const baseUrl = process.env.REACT_APP_BASEURL;
-  const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
   const navigate = useNavigate();
-  const paystack = location?.state?.paystackData;
+  const currency = getCurrency(data);
 
-  const currency = data && getCurrency(data);
   const [validatePay, setValidatePay] = useState(false);
   const [loading, setLoading] = useState(true);
-  console.log("Paystack Data:", paystack); // Log to verify
 
-  console.log("Location State:", location.state);
+  // const query = new URLSearchParams(window.location.search);
+  // const reference = query.get("reference");
 
-  const MakeRequest = async () => {
-    // if (!paystack) {
-    //   console.error("No payment data found.");
-    //   return;
-    // }
+  const reference = new URLSearchParams(location.search).get("reference");
 
+  useEffect(() => {
+    const verifyPayment = async () => {
+      try {
+        const response = await axios.get(
+          `https://api.paystack.co/transaction/verify/${reference}`,
+          {
+            headers: {
+              Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+            },
+          }
+        );
+        console.log(reference);
+
+        if (response.data.data.status === "success") {
+          toast.success("Payment successful!");
+          await dispenseTickets(); // Call ticket dispensing function
+
+          navigate("/success");
+        } else {
+          toast.error("Payment verification failed.");
+          navigate("/checkout");
+        }
+      } catch (error) {
+        console.error("Error verifying payment:", error);
+        toast.error("An error occurred during payment verification.");
+        navigate("/checkout");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyPayment();
+  }, [reference, navigate]);
+
+  const dispenseTickets = async () => {
     try {
-      setLoading(true);
       const res = await axios.post(`${baseUrl}/dispense/internationalticket`, {
         userdata: data,
         ticketData: ticketData,
         myCart: tickets,
-        paystackData: paystack,
+        paystackData: paystackData,
       });
 
       console.log("Ticket Response:", res);
+
       if (res.data.error === false) {
         setValidatePay(true);
       } else {
-        alert("Payment validation failed. Please contact support.");
+        console.log("Ticket dispensing failed. Please contact support.");
       }
     } catch (error) {
-      console.error("Payment processing error:", error);
-      alert("An error occurred while processing your payment.");
+      console.error("Ticket processing error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    MakeRequest();
-  }, []);
-  console.log(data);
-  console.log(ticketData);
+  // useEffect(() => {
+  //   verifyPayment();
+  // }, [verifyPayment]);
 
   return (
     <div className="detailsBanner">
       {!loading ? (
-        <div
-          style={{
-            height: "100vh",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "white",
-          }}
-        >
+        <div className="flex flex-col items-center justify-center h-screen text-white">
           {!validatePay ? (
             <>
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "black",
-                }}
-              >
+              <span className="text-black">
                 The payment is invalid! Please contact admin.
               </span>
               <button
                 onClick={() => navigate("/")}
-                style={{
-                  padding: 10,
-                  marginTop: 20,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                }}
-                className="flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700"
+                className="mt-5 px-6 py-3 bg-red-600 text-white font-medium rounded-md hover:bg-red-700"
               >
                 Go to Homepage
               </button>
             </>
           ) : (
             <div>
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "black",
-                }}
-              >
+              <span className="text-black">
                 The tickets have been purchased successfully.
               </span>
               <button
                 onClick={() => navigate("/")}
-                style={{
-                  marginTop: 20,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                }}
-                className="flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700"
+                className="mt-5 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
               >
                 Go to Homepage
               </button>
-              <div className="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm md:w-[700px]">
-                <div className="aby border-t border-gray-200 px-4 py-6 sm:px-6">
+              <div className="mt-4 p-4 rounded-lg border bg-white shadow-md md:w-[700px]">
+                <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
                   {tickets.map((item, i) => (
-                    <div className="flex items-center justify-between" key={i}>
-                      <dt className="text-base text-customBlack">{`${item?.qty} * ${item?.name}`}</dt>
+                    <div className="flex justify-between" key={i}>
+                      <dt className="text-base text-customBlack">{`${item.qty} * ${item.name}`}</dt>
                       <dd className="text-base font-medium text-customBlack">
                         <NumericFormat
                           value={Number(item.price * item.qty).toFixed(2)}
-                          displayType={"text"}
-                          thousandSeparator={true}
-                          prefix={`${currency}`}
+                          displayType="text"
+                          thousandSeparator
+                          prefix={currency}
                         />
                       </dd>
                     </div>
                   ))}
-
-                  <div className="flex items-center justify-between">
+                  <div className="flex justify-between">
                     <dt className="text-base text-red-600">Subtotal</dt>
                     <dd className="text-base font-medium text-red-600">
                       <NumericFormat
                         value={Number(data.subTotal).toFixed(2)}
-                        displayType={"text"}
-                        thousandSeparator={true}
-                        prefix={`${currency}`}
+                        displayType="text"
+                        thousandSeparator
+                        prefix={currency}
                       />
                     </dd>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex justify-between">
                     <dt className="text-base text-customBlack">Booking Fee</dt>
                     <dd className="text-base font-medium text-customBlack">
                       <NumericFormat
                         value={Number(data.totalbookingFee).toFixed(2)}
-                        displayType={"text"}
-                        thousandSeparator={true}
-                        prefix={`${currency}`}
+                        displayType="text"
+                        thousandSeparator
+                        prefix={currency}
                       />
                     </dd>
                   </div>
-                  <div className="flex items-center justify-between">
+                  <div className="flex justify-between">
                     <dt className="text-base text-customBlack">
-                      VAT
-                      <span className="ml-2 rounded-lg bg-gray-200 px-2 py-1 text-xs tracking-wide text-gray-600">
-                        {taxPercent}%
+                      VAT{" "}
+                      <span className="ml-2 bg-gray-200 px-2 py-1 text-xs text-gray-600">
+                        {process.env.REACT_APP_TAXPERCENT}%
                       </span>
                     </dt>
                     <dd className="text-base font-medium text-customBlack">
                       <NumericFormat
                         value={Number(data.vat).toFixed(2)}
-                        displayType={"text"}
-                        thousandSeparator={true}
-                        prefix={`${currency}`}
+                        displayType="text"
+                        thousandSeparator
+                        prefix={currency}
                       />
                     </dd>
                   </div>
-
-                  <div className="flex items-center justify-between border-t border-gray-200 pt-6">
-                    <dt className="text-lg text-red-600 font-bold">Total</dt>
-                    <dd className="text-base font-bold text-red-600">
+                  <div className="flex justify-between border-t border-gray-200 pt-6">
+                    <dt className="text-lg font-bold text-red-600">Total</dt>
+                    <dd className="text-lg font-bold text-red-600">
                       <NumericFormat
                         value={Number(data.totalAmount).toFixed(2)}
-                        displayType={"text"}
-                        thousandSeparator={true}
-                        prefix={`${currency}`}
+                        displayType="text"
+                        thousandSeparator
+                        prefix={currency}
                       />
                     </dd>
                   </div>
@@ -223,17 +216,10 @@ const SuccessComponent: React.FC<Props> = ({ tickets, ticketData, data }) => {
           <ContentWrapper>
             <div className="left skeleton"></div>
             <div className="right">
-              <span
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "white",
-                }}
-              >
-                Loading...do not refresh.
+              <span className="flex items-center justify-center text-white">
+                Loading... do not refresh.
               </span>
-              {[1, 2, 3, 4, 5, 6, 7].map((item, i) => (
+              {[1, 2, 3, 4, 5, 6, 7].map((_, i) => (
                 <div key={i} className="row skeleton"></div>
               ))}
             </div>

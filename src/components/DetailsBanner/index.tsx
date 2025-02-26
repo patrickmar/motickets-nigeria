@@ -16,12 +16,27 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+interface TicketQty {
+  qty: number;
+}
+interface BookingFee {
+  booking_fee: number;
+}
+
 type Props = {
   id: any;
   data: any;
   loading: boolean;
   error?: any;
 };
+interface Ticket {
+  id: number;
+  name: string;
+  price: number;
+  qty: number;
+  booking_fee: number;
+  totalPrice?: number;
+}
 
 const DetailsBanner = ({ id, data, loading, error }: Props) => {
   const newData = data?.data[0];
@@ -39,32 +54,54 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   useEffect(() => {
     if (newData) {
       setSelectedImage(newData?.imgs[0]?.img);
+
       setTickets(
-        newData.ticketCategories.map((category: any) => ({
-          price: category.price,
-          discount_price: category.discount_price,
-          event_id: category.event_id,
-          id: category.id,
-          name: category.name,
-          booking_fee: category.booking_fee,
-          qty: 0,
-          issued_qty: category.quantity,
-        }))
+        (
+          prevTickets: {
+            price: number;
+            discount_price: number;
+            event_id: number;
+            id: number;
+            name: string;
+            booking_fee: number;
+            qty: number;
+            issued_qty: number;
+          }[]
+        ) => {
+          if (prevTickets.length === newData.ticketCategories.length)
+            return prevTickets;
+          return newData.ticketCategories.map((category: any) => ({
+            price: category.price,
+            discount_price: category.discount_price,
+            event_id: category.event_id,
+            id: category.id,
+            name: category.name,
+            booking_fee: category.booking_fee,
+            qty: 0,
+            issued_qty: category.quantity,
+          }));
+        }
       );
 
-      setTicketsQty(
-        newData.ticketCategories.map((category: any) => ({
+      setTicketsQty((prevQty: { qty: number }[]) => {
+        if (prevQty.length === newData.ticketCategories.length) return prevQty;
+        return newData.ticketCategories.map((category: any) => ({
           qty: category.quantity,
-        }))
-      );
+        }));
+      });
 
-      setbookFees(
-        newData.ticketCategories.map((category: any) => ({
-          booking_fee: category.booking_fee,
-        }))
-      );
+      setbookFees((prevFees: BookingFee[]) => {
+        if (prevFees.length === newData.ticketCategories.length)
+          return prevFees;
+
+        return newData.ticketCategories.map(
+          (category: { booking_fee: number }) => ({
+            booking_fee: category.booking_fee,
+          })
+        );
+      });
     }
-  }, [data, newData]);
+  }, [newData]); // ✅ `data` dependency removed to avoid unnecessary updates
 
   const eventInfo = (newData: any) => {
     const options = [
@@ -163,29 +200,30 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   };
 
   const calculateTotalPrice = (category: any, index: number) => {
-    const updatedCategories = [...tickets];
+    const updatedCategories = [...tickets]; // 🚨 Creating a new state copy inside render
     const updatedBookFees = [...bookFees];
-    //console.log(updatedBookFees);
+
     const qty = category.qty > 0 ? category.qty : 1;
     const bookFee = updatedBookFees[index].booking_fee;
-    //console.log(updatedBookFees[index].booking_fee);
     const newBookFee = bookFee * qty;
     const newPrice = category.price * qty;
     const totalPrice = newBookFee + newPrice;
-    //console.log(totalPrice);
-    //updatedCategories[index].booking_fee = newBookFee;
-    //setbookFees(newBookFee);
-    updatedCategories[index].booking_fee = newBookFee;
-    //setbookFees(updatedCategories);
+
+    updatedCategories[index].booking_fee = newBookFee; // 🚨 Updating state directly inside render
     console.log(totalPrice);
     return newPrice;
   };
 
   const goToCheckout = () => {
-    console.log(tickets);
     const { currency, title } = newData;
+
+    const updatedTickets = tickets.map((ticket: any, index: number) => ({
+      ...ticket,
+      totalPrice: calculateTotalPrice(ticket, index), // Ensure price is updated
+    }));
+
     navigate("/checkout", {
-      state: { tickets: tickets, data: { currency, title } },
+      state: { tickets: updatedTickets, data: { currency, title } },
     });
   };
 
