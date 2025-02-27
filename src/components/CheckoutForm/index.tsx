@@ -16,7 +16,7 @@ import { validationSchema } from "./validation";
 import { NumericFormat } from "react-number-format";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrency, getCurrencyName } from "../../utils/functions";
-
+import PaystackPop from '@paystack/inline-js'
 import usePost from "../../hooks/usePost";
 
 import { toast } from "react-toastify";
@@ -50,7 +50,8 @@ const CheckoutForm = (props: Props) => {
   const defaultCountryCode = process.env.REACT_APP_COUNTRYCODE;
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
   const baseUrl = process.env.REACT_APP_BASEURL;
-  const PAYSTACK_KEY = process.env.REACT_APP_PAYSTACK_SECRET;
+  const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
+  console.log(paystackKey);
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -123,36 +124,70 @@ const CheckoutForm = (props: Props) => {
 
     // Define the payload
     const payload = {
+      key: paystackKey,
       email,
       amount: totalAmount, // Corrected: Now in kobo
-      currency: currency || "NGN",
+      currency: currencyName || "NGN",
       metadata: { firstName, lastName, phoneNo, userConsent },
       callback_url: `${window.location.origin}/success`,
     };
+
+    console.log(baseUrl);
     console.log("Payload Sent to Paystack:", payload); // Debugging log
     console.log("Total Amount (NGN):", totalAmount);
     console.log("Total Amount (NGN):", totalAmount);
 
     try {
-      const response = await axios.post(
-        // "https://api.paystack.co/transaction/initialize",
-        `${baseUrl}/transaction/initialize`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${PAYSTACK_KEY}`,
-            "Content-Type": "application/json",
-          },
+      console.log(paystackKey);
+      const popup = new PaystackPop();
+      popup.newTransaction({
+       
+        key: paystackKey,
+      email:email,
+      amount: totalAmount, // Corrected: Now in kobo
+      currency: currencyName || "NGN",
+      metadata: { firstName, lastName, phoneNo, userConsent },
+      
+        onSuccess: (transaction) => {
+          console.log("onSucess:", transaction);
+          //window.location.href = 'http://localhost:3000/success?trxref=2025022713859828&reference=2025022713859828';
+
+        },
+        onLoad: (response) => {
+          console.log("onLoad: ", response);
+        },
+        onCancel: () => {
+          console.log("onCancel");
+        },
+        onError: (error) => {
+          console.log("Error: ", error.message);
         }
-      );
+      })
+//       const apiResponse = await axios.post(
+//         // "https://api.paystack.co/transaction/initialize",
+//         `${baseUrl}/paystack/initialise_transaction`,
+//         payload,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${PAYSTACK_KEY}`,
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
 
-      console.log("Paystack Response:", response.data);
+//       console.log("Paystack Response:", apiResponse);
 
-      if (response.data.status) {
-        window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
-      } else {
-        throw new Error("Failed to generate Paystack authorization URL");
-      }
+//       if (apiResponse.data.status == true) {
+//         const popup = new PaystackPop()
+// const res= popup.resumeTransaction(apiResponse.data.data.access_code)
+
+//        console.log(res);
+//        if(res.status=="success"){
+//         window.location.href = res.response.redirecturl;
+//        }//window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
+//       } else {
+//         throw new Error("Failed to generate Paystack authorization URL");
+//       }
     } catch (error) {
       console.error(
         "Payment initiation failed:",

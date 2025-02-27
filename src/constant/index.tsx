@@ -15,7 +15,7 @@ export const currencies = [
   // },
   {
     name: "NGN",
-    value: "NGN",
+   value: "₦",
   },
 ];
 

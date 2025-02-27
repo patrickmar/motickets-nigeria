@@ -48,7 +48,7 @@ const Header: React.FC = () => {
   const [mobileMenu, setMobileMenu] = useState<boolean>(false);
   const [query, setQuery] = useState<string>("");
   const [isVisible, setIsVisible] = useState(false);
-  console.log(query);
+ // console.log(query);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -65,7 +65,7 @@ const Header: React.FC = () => {
   console.log("isAuthenticated:", isAuthenticated);
   console.log("hostid:", hostid);
 
-  console.log(setQuery);
+ // console.log(setQuery);
 
   // useEffect(() => {
   //   if (!hostid) {

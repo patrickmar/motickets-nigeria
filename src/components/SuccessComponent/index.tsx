@@ -66,20 +66,20 @@ const SuccessComponent: React.FC<Props> = ({
           }
         );
         console.log(reference);
-
+        console.log("response : ", response);
         if (response.data.data.status === "success") {
           toast.success("Payment successful!");
           await dispenseTickets(); // Call ticket dispensing function
 
-          navigate("/success");
+         // navigate("/success");
         } else {
-          toast.error("Payment verification failed.");
-          navigate("/checkout");
+          // toast.error("Payment verification failed.");
+          // navigate("/checkout");
         }
       } catch (error) {
         console.error("Error verifying payment:", error);
         toast.error("An error occurred during payment verification.");
-        navigate("/checkout");
+       // navigate("/checkout");
       } finally {
         setLoading(false);
       }
