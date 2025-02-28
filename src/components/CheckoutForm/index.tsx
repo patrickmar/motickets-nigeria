@@ -140,54 +140,80 @@ const CheckoutForm = (props: Props) => {
     try {
       console.log(paystackKey);
       const popup = new PaystackPop();
-      popup.newTransaction({
+      // popup.newTransaction({
        
-        key: paystackKey,
-      email:email,
-      amount: totalAmount, // Corrected: Now in kobo
-      currency: currencyName || "NGN",
-      metadata: { firstName, lastName, phoneNo, userConsent },
+      //   key: paystackKey,
+      // email:email,
+      // amount: totalAmount, // Corrected: Now in kobo
+      // currency: currencyName || "NGN",
+      // metadata: { firstName, lastName, phoneNo, userConsent },
       
-        onSuccess: (transaction) => {
-          console.log("onSucess:", transaction);
-          //window.location.href = 'http://localhost:3000/success?trxref=2025022713859828&reference=2025022713859828';
+      //   onSuccess: (transaction) => {
+      //     console.log("onSucess:", transaction);
+      //     //window.location.href = 'http://localhost:3000/success?trxref=2025022713859828&reference=2025022713859828';
 
-        },
-        onLoad: (response) => {
-          console.log("onLoad: ", response);
-        },
-        onCancel: () => {
-          console.log("onCancel");
-        },
-        onError: (error) => {
-          console.log("Error: ", error.message);
+      //   },
+      //   onLoad: (response) => {
+      //     console.log("onLoad: ", response);
+      //   },
+      //   onCancel: () => {
+      //     console.log("onCancel");
+      //   },
+      //   onError: (error) => {
+      //     console.log("Error: ", error.message);
+      //   }
+      // })
+
+
+      const apiResponse = await axios.post(
+        // "https://api.paystack.co/transaction/initialize",
+        `${baseUrl}/paystack/initialise_transaction`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${paystackKey}`,
+            "Content-Type": "application/json",
+          },
         }
-      })
-//       const apiResponse = await axios.post(
-//         // "https://api.paystack.co/transaction/initialize",
-//         `${baseUrl}/paystack/initialise_transaction`,
-//         payload,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${PAYSTACK_KEY}`,
-//             "Content-Type": "application/json",
-//           },
-//         }
-//       );
+      );
 
-//       console.log("Paystack Response:", apiResponse);
+      console.log("Paystack Response:", apiResponse);
 
-//       if (apiResponse.data.status == true) {
-//         const popup = new PaystackPop()
-// const res= popup.resumeTransaction(apiResponse.data.data.access_code)
+      if (apiResponse.data.status == true) {
+        const popup = new PaystackPop()
+const res= popup.resumeTransaction(apiResponse.data.data.access_code,
 
-//        console.log(res);
-//        if(res.status=="success"){
-//         window.location.href = res.response.redirecturl;
-//        }//window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
-//       } else {
-//         throw new Error("Failed to generate Paystack authorization URL");
-//       }
+  {
+       
+      
+      onSuccess: (transaction) => {
+        // console.log("onSucess:", transaction);
+        // console.log("onSucess:", transaction.reference);
+        //window.location.href = `${baseUrl}/success?reference=${transaction.reference}`;
+
+        window.location.href = `http://localhost:3000/success?reference=${transaction.reference}`;
+
+      },
+      onLoad: (response) => {
+        console.log("onLoad: ", response);
+      },
+      onCancel: () => {
+        console.log("onCancel");
+      },
+      onError: (error) => {
+        console.log("Error: ", error.message);
+      }
+    }
+)
+
+       console.log(res);
+      // console.log(res[0].response);
+      //  if(res.status=="success"){
+      //   window.location.href = res.response.redirecturl;
+      //  }//window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
+      } else {
+        throw new Error("Failed to generate Paystack authorization URL");
+      }
     } catch (error) {
       console.error(
         "Payment initiation failed:",

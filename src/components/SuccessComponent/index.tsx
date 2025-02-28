@@ -33,7 +33,7 @@ interface Props {
   paystackData: PaystackData;
 }
 
-const PAYSTACK_SECRET_KEY = process.env.REACT_APP_PAYSTACK_SECRET;
+const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
 
 const SuccessComponent: React.FC<Props> = ({
   tickets,
@@ -57,17 +57,14 @@ const SuccessComponent: React.FC<Props> = ({
   useEffect(() => {
     const verifyPayment = async () => {
       try {
-        const response = await axios.get(
-          `https://api.paystack.co/transaction/verify/${reference}`,
-          {
-            headers: {
-              Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
-            },
-          }
+        const ApiResponse = await axios.get(
+          `${baseUrl}/paystack/verify_transaction/${reference}`,
+          
         );
         console.log(reference);
-        console.log("response : ", response);
-        if (response.data.data.status === "success") {
+        console.log("response : ", ApiResponse);
+        let status=ApiResponse.data.status;
+        if ( status === 'success') {
           toast.success("Payment successful!");
           await dispenseTickets(); // Call ticket dispensing function
 
