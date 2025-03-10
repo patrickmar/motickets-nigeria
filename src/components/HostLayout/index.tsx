@@ -53,9 +53,6 @@ interface User {
   phone: string;
 }
 
-// interface UserState {
-//   isAuthenticated: boolean;
-// }
 
 const HostLayer: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -137,12 +134,7 @@ const HostLayer: React.FC = () => {
     e.preventDefault();
     console.log("Submitting form data:", formData);
 
-    // if (!validateSortCode(formData.sortCode)) {
-    //   toast.error(
-    //     "Invalid sort code. Sort code should be in format xx-xx-xx or xxxxxx"
-    //   );
-    //   return;
-    // }
+    
 
     if (!isValidPhoneNumber(formData.phone)) {
       toast.error("Invalid phone number");
