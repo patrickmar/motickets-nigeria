@@ -80,7 +80,8 @@ const CheckoutForm = (props: Props) => {
   const currency = data && getCurrency(data);
   const currencyName = data && getCurrencyName(data);
   const query = new URLSearchParams(window.location.search);
-  const amountInKobo = Math.round(Number(totalAmount) * 100);
+  const totalAmountInKobo = Math.round(Number(totalAmount) * 100);
+  
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevState) => ({
@@ -122,48 +123,24 @@ const CheckoutForm = (props: Props) => {
       return;
     }
 
+    console.log("tick",tickets);
     // Define the payload
     const payload = {
       key: paystackKey,
       email,
-      amount: totalAmount, // Corrected: Now in kobo
+      amount: totalAmountInKobo, // Corrected: Now in kobo
       currency: currencyName || "NGN",
-      metadata: { firstName, lastName, phoneNo, userConsent },
-      callback_url: `${window.location.origin}/success`,
+      metadata: { firstName, lastName, phoneNo, userConsent, tickets },
+      
     };
 
     console.log(baseUrl);
     console.log("Payload Sent to Paystack:", payload); // Debugging log
     console.log("Total Amount (NGN):", totalAmount);
-    console.log("Total Amount (NGN):", totalAmount);
+    console.log("Total formData):", formData);
 
     try {
-      console.log(paystackKey);
-      const popup = new PaystackPop();
-      // popup.newTransaction({
-       
-      //   key: paystackKey,
-      // email:email,
-      // amount: totalAmount, // Corrected: Now in kobo
-      // currency: currencyName || "NGN",
-      // metadata: { firstName, lastName, phoneNo, userConsent },
       
-      //   onSuccess: (transaction) => {
-      //     console.log("onSucess:", transaction);
-      //     //window.location.href = 'http://localhost:3000/success?trxref=2025022713859828&reference=2025022713859828';
-
-      //   },
-      //   onLoad: (response) => {
-      //     console.log("onLoad: ", response);
-      //   },
-      //   onCancel: () => {
-      //     console.log("onCancel");
-      //   },
-      //   onError: (error) => {
-      //     console.log("Error: ", error.message);
-      //   }
-      // })
-
 
       const apiResponse = await axios.post(
         // "https://api.paystack.co/transaction/initialize",
@@ -187,12 +164,11 @@ const res= popup.resumeTransaction(apiResponse.data.data.access_code,
        
       
       onSuccess: (transaction) => {
-        // console.log("onSucess:", transaction);
-        // console.log("onSucess:", transaction.reference);
-        //window.location.href = `${baseUrl}/success?reference=${transaction.reference}`;
-
-        window.location.href = `http://localhost:3000/success?reference=${transaction.reference}`;
-
+       
+        navigate("/success", {
+          state: { tickets: tickets, data, totalAmount, subTotal, totalbookingFee, vat, reference:transaction.reference, formData  },
+        });
+      
       },
       onLoad: (response) => {
         console.log("onLoad: ", response);
