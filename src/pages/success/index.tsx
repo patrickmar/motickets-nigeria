@@ -1,32 +1,34 @@
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
 import SuccessComponent from "../../components/SuccessComponent";
 
-const Success = () => {
+type Props = {};
+
+const Success = (props: Props) => {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-
-  const [tickets, setTickets] = useState(location?.state?.tickets);
-  const [data, setData] = useState(location?.state?.data);
-  const [ticketData, setTicketData] = useState(location?.state?.ticketData);
-  const [paystackData, setPaystackData] = useState(
-    location?.state?.paystackData || {
-      reference: searchParams.get("reference"),
-    }
-  );
-
-  useEffect(() => {
-    if (!paystackData?.reference) {
-      console.error("Missing payment reference.");
-    }
-  }, [paystackData]);
-
+  const stripeData = location?.state?.stripeData;
+  const tickets = location?.state?.tickets;
+  const data = location?.state?.data;
+  const totalAmount = location?.state?.totalAmount;
+  const totalbookingFee = location?.state?.totalbookingFee;
+  const vat = location?.state?.vat;
+  const subtotal = location?.state?.subtotal;
+  const reference = location?.state?.reference;
+  const formData = location?.state?.formData;
+ 
   return (
     <SuccessComponent
+      
       tickets={tickets}
       data={data}
-      ticketData={ticketData}
-      paystackData={paystackData}
+      totalbookingFee={totalbookingFee}
+      vat={vat}
+      totalAmount={totalAmount}
+      subTotal={subtotal}
+      reference={reference}
+      formData={formData}
+      // vat={vat}
+      
+      // subTotal={subtotal}
     />
   );
 };

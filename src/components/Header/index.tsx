@@ -61,9 +61,9 @@ const Header: React.FC = () => {
   ) as User | null;
 
   const hostid = user?.id || "";
-  console.log("User:", user);
-  console.log("isAuthenticated:", isAuthenticated);
-  console.log("hostid:", hostid);
+  // console.log("User:", user);
+  // console.log("isAuthenticated:", isAuthenticated);
+  // console.log("hostid:", hostid);
 
  // console.log(setQuery);
 

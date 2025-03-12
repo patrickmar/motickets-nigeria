@@ -6,6 +6,7 @@ import { getCurrency } from "../../utils/functions";
 import "./styles.scss";
 import ContentWrapper from "../ContentWrapper";
 import { toast } from "react-toastify";
+import { object } from "yup";
 
 interface Ticket {
   qty: number;
@@ -19,60 +20,119 @@ interface PaystackData {
   reference: string;
 }
 
-interface PaymentData {
-  subTotal: number;
-  totalbookingFee: number;
-  vat: number;
-  totalAmount: number;
-}
+// interface PaymentData {
+//   subTotal: number;
+//   totalbookingFee: number;
+//   vat: number;
+//   totalAmount: number;
+// }
 
 interface Props {
-  tickets: Ticket[];
-  data: PaymentData;
-  ticketData: any;
-  paystackData: PaystackData;
+  tickets: Array<any>;
+  formData: Array<any>;
+  
+ 
+  totalAmount: number;
+   subTotal: number;
+  totalbookingFee: number;
+  vat: number;
+  data: any;
+  reference: number;
 }
 
 const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
 
-const SuccessComponent: React.FC<Props> = ({
-  tickets,
-  ticketData,
-  data,
-  paystackData,
-}) => {
+
+
+const SuccessComponent = (props: Props) => {
+  const { tickets, data, totalAmount, subTotal, totalbookingFee, vat, reference, formData } = props;
+ 
   const location = useLocation();
   const baseUrl = process.env.REACT_APP_BASEURL;
   const navigate = useNavigate();
   const currency = getCurrency(data);
-
+  
   const [validatePay, setValidatePay] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [payres, setPayres] = useState({});
 
   // const query = new URLSearchParams(window.location.search);
   // const reference = query.get("reference");
 
-  const reference = new URLSearchParams(location.search).get("reference");
-
+ // const reference = new URLSearchParams(location.search).get("reference");
+const newJson={
+ vat: vat,
+        totalbookingFee:totalbookingFee,
+        subTotal:subTotal,
+        totalAmount: totalAmount 
+      
+      }
+ const mergedData={...data, ...formData,...newJson};
+ 
+ console.log("userdata ", mergedData);
+ console.log("ticket ", tickets);
+ console.log("ref ", reference);
+ 
   useEffect(() => {
+
+    
+  
     const verifyPayment = async () => {
       try {
-        const ApiResponse = await axios.get(
+        await axios.get(
           `${baseUrl}/paystack/verify_transaction/${reference}`,
           
-        );
-        console.log(reference);
-        console.log("response : ", ApiResponse);
-        let status=ApiResponse.data.status;
-        if ( status === 'success') {
-          toast.success("Payment successful!");
-          await dispenseTickets(); // Call ticket dispensing function
+        ).then(res => {
+          let status= res.data.paystackresp.status;
+          console.log(status);
+          if ( status === true) {
+            setPayres(res.data);
 
-         // navigate("/success");
-        } else {
-          // toast.error("Payment verification failed.");
-          // navigate("/checkout");
-        }
+         try{
+            toast.success("Payment successful!");
+           
+              axios.post(`${baseUrl}/dispense/paystack_ticket`, {
+              userdata: mergedData,
+              
+              myCart: tickets,
+              paystackData: res.data.paystackresp.data,
+            }).then(resDispense => {
+              console.log("Ticket Response:", resDispense);
+              if (resDispense.data.error === false) {
+                      setValidatePay(true);
+                    } else {
+                      console.log("Ticket dispensing failed. Please contact support.");
+                    }
+            
+            });
+      
+            
+          
+            // if (resDispense.data.error === false) {
+            //   setValidatePay(true);
+            // } else {
+            //   console.log("Ticket dispensing failed. Please contact support.");
+            // }
+          } catch (error) {
+            console.error("Ticket processing error:", error);
+          } finally {
+            setLoading(false);
+          }
+        
+          // dispenseTickets(); // Call ticket dispensing function
+  
+           // navigate("/success");
+          } else {
+             toast.error("Payment verification failed.");
+            // navigate("/checkout");
+          }
+          }).catch(error => {
+         console.log(error);
+          });
+        console.log(reference);
+        
+       
+       
       } catch (error) {
         console.error("Error verifying payment:", error);
         toast.error("An error occurred during payment verification.");
@@ -82,31 +142,37 @@ const SuccessComponent: React.FC<Props> = ({
       }
     };
 
+    
     verifyPayment();
-  }, [reference, navigate]);
+  }, []);
+  console.log(payres);
+  // const dispenseTickets = async () => {
+  //   try {
+  //     //console.log("ticketData ", ticketData);
+  //     console.log("userdata ", mergedData);
+  //     console.log("ticket ", tickets);
+  //     console.log(payres);
+     // console.log(ticketData);
+  //     const res = await axios.post(`${baseUrl}/dispense/paystack_ticket`, {
+  //       userdata: mergedData,
+        
+  //       myCart: tickets,
+  //       paystackData: payres,
+  //     });
 
-  const dispenseTickets = async () => {
-    try {
-      const res = await axios.post(`${baseUrl}/dispense/internationalticket`, {
-        userdata: data,
-        ticketData: ticketData,
-        myCart: tickets,
-        paystackData: paystackData,
-      });
+  //     console.log("Ticket Response:", res);
 
-      console.log("Ticket Response:", res);
-
-      if (res.data.error === false) {
-        setValidatePay(true);
-      } else {
-        console.log("Ticket dispensing failed. Please contact support.");
-      }
-    } catch (error) {
-      console.error("Ticket processing error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     if (res.data.error === false) {
+  //       setValidatePay(true);
+  //     } else {
+  //       console.log("Ticket dispensing failed. Please contact support.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Ticket processing error:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // useEffect(() => {
   //   verifyPayment();

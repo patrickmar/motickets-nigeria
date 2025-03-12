@@ -159,9 +159,11 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
     // Calculate the difference in days
     return endDateMoment.diff(startDateMoment, "days") + 1;
   };
-  //console.log(tickets);
+  console.log(newData);
   const currency = getCurrency(newData);
+  console.log(currency);
   const currencyName = getCurrencyName(newData);
+  console.log(currencyName);
   const isButtonEnabled = tickets.some((item: any) => item.qty > 0);
   console.log(currencyName);
   const increment = (index: number) => {
