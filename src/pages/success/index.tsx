@@ -14,7 +14,7 @@ const Success = (props: Props) => {
   const subtotal = location?.state?.subtotal;
   const reference = location?.state?.reference;
   const formData = location?.state?.formData;
- 
+  const payValidated = location?.state?.payValidated;
   return (
     <SuccessComponent
       
@@ -26,6 +26,7 @@ const Success = (props: Props) => {
       subTotal={subtotal}
       reference={reference}
       formData={formData}
+      payValidated={payValidated}
       // vat={vat}
       
       // subTotal={subtotal}

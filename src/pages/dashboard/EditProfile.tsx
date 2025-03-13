@@ -46,7 +46,7 @@ const EditProfile = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  console.log(user);
+  //console.log(user);
 
   const [hostname, setHostName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -67,7 +67,7 @@ const EditProfile = () => {
   const { data } = useGetHostQuery(user?.id!, {
     skip: !user?.id,
   });
-  console.log(data);
+  //console.log(data);
   const userData = data ? data[0] : null; // Get the first user
 
   useEffect(() => {

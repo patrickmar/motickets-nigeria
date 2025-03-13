@@ -60,13 +60,13 @@ export const userApi = createApi({
         dispatch(setLoading(true));
         try {
           const { data } = await queryFulfilled;
-          console.log("API response:", data); // Log the full API response
+          //console.log("API response:", data); // Log the full API response
           if (data.length > 0) {
             dispatch(setUser(data[0]));
             dispatch(setIsAuthenticated(true));
           }
         } catch (error) {
-          console.error(error);
+          //console.error(error);
         } finally {
           dispatch(setLoading(false));
         }
@@ -85,7 +85,7 @@ export const userApi = createApi({
       async onQueryStarted(args, { dispatch, queryFulfilled, getState }) {
         try {
           const { data } = await queryFulfilled;
-          console.log("UpdateHost response data:", data); // Log response data
+          //console.log("UpdateHost response data:", data); // Log response data
 
           const state = getState() as RootState;
           const userId = state.auth?.user?.id; // Access user ID from state
@@ -125,7 +125,7 @@ export const userApi = createApi({
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          console.log("UpdateAvatar response data:", data);
+          //console.log("UpdateAvatar response data:", data);
 
           if (data && !data.error && data.user) {
             dispatch(setUser(data.user)); // Assuming `data.user` is of type `User`

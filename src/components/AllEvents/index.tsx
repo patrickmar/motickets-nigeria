@@ -8,7 +8,7 @@ const AllTickets = (props: Props) => {
   const currency = process.env.REACT_APP_CURRENCY;
   const [endpoint, setEndpoint] = useState(`/eventspercurrency/${currency}`);
   const { data, loading } = useFetch(endpoint);
-  console.log(setEndpoint);
+  //console.log(setEndpoint);
 
   // const onTabChange = (tab: string) => {
   //   setEndpoint(

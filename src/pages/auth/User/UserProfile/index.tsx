@@ -32,7 +32,7 @@ const Profile = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  console.log(user);
+  //console.log(user);
 
   const [email, setEmail] = useState<string>("");
   const { avatarUrl } = useAvatar();
@@ -65,7 +65,7 @@ const Profile = () => {
     };
     updateProfile(userData);
   };
-  console.log(submitHandler);
+ // console.log(submitHandler);
   const handlePasswordChange = () => {
     navigate("/profile_change");
   };

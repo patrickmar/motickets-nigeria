@@ -38,6 +38,7 @@ interface Props {
   vat: number;
   data: any;
   reference: number;
+  payValidated:any
 }
 
 const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
@@ -45,108 +46,121 @@ const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
 
 
 const SuccessComponent = (props: Props) => {
-  const { tickets, data, totalAmount, subTotal, totalbookingFee, vat, reference, formData } = props;
+  const { tickets, data, totalAmount, subTotal, totalbookingFee, vat, reference, formData, payValidated } = props;
  
   const location = useLocation();
   const baseUrl = process.env.REACT_APP_BASEURL;
   const navigate = useNavigate();
   const currency = getCurrency(data);
   
-  const [validatePay, setValidatePay] = useState(false);
-  const [loading, setLoading] = useState(true);
+ // const [check, setCheck] = useState(true);
+  const [tick, setTick]= useState(tickets);
+  const [validatePay, setValidatePay] = useState(payValidated);
+  const [loading, setLoading] = useState(false);
   const [payres, setPayres] = useState({});
 
   // const query = new URLSearchParams(window.location.search);
   // const reference = query.get("reference");
 
  // const reference = new URLSearchParams(location.search).get("reference");
-const newJson={
- vat: vat,
-        totalbookingFee:totalbookingFee,
-        subTotal:subTotal,
-        totalAmount: totalAmount 
+// const newJson={
+//  vat: vat,
+//         totalbookingFee:totalbookingFee,
+//         subTotal:subTotal,
+//         totalAmount: totalAmount 
       
-      }
- const mergedData={...data, ...formData,...newJson};
+//       }
+//  const mergedData={...data, ...formData,...newJson};
  
- console.log("userdata ", mergedData);
- console.log("ticket ", tickets);
- console.log("ref ", reference);
+//  console.log("userdata ", mergedData);
+ //console.log("ticket ", tickets);
+ //console.log("ref ", reference);
+ //console.log("check ", validatePay);
  
-  useEffect(() => {
+  // useEffect(() => {
 
     
   
-    const verifyPayment = async () => {
-      try {
-        await axios.get(
-          `${baseUrl}/paystack/verify_transaction/${reference}`,
+  //   const verifyPayment = async () => {
+  //     try {
+  //       await axios.get(
+  //         `${baseUrl}/paystack/verify_transaction/${reference}`,
           
-        ).then(res => {
-          let status= res.data.paystackresp.status;
-          console.log(status);
-          if ( status === true) {
-            setPayres(res.data);
+  //       ).then(res => {
+  //         let status= res.data.paystackresp.status;
+  //         console.log('tick',tick);
+  //         if ( status === true) {
+  //           setPayres(res.data);
 
-         try{
-            toast.success("Payment successful!");
+  //        try{
+  //           toast.success("Payment successful!");
            
-              axios.post(`${baseUrl}/dispense/paystack_ticket`, {
-              userdata: mergedData,
+  //             axios.post(`${baseUrl}/dispense/paystack_ticket`, {
+  //             userdata: mergedData,
               
-              myCart: tickets,
-              paystackData: res.data.paystackresp.data,
-            }).then(resDispense => {
-              console.log("Ticket Response:", resDispense);
-              if (resDispense.data.error === false) {
-                      setValidatePay(true);
-                    } else {
-                      console.log("Ticket dispensing failed. Please contact support.");
-                    }
+  //             myCart: tick,
+  //             paystackData: res.data.paystackresp.data,
+  //           }).then(resDispense => {
+  //             console.log("Ticket Response:", resDispense);
+  //             if (resDispense.data.error === false) {
+  //                     setValidatePay(true);
+                     
+                      
+  //                     resetState();
+  //                   } else {
+  //                     console.log("Ticket dispensing failed. Please contact support.");
+  //                   }
             
-            });
+  //           });
       
-            
           
-            // if (resDispense.data.error === false) {
-            //   setValidatePay(true);
-            // } else {
-            //   console.log("Ticket dispensing failed. Please contact support.");
-            // }
-          } catch (error) {
-            console.error("Ticket processing error:", error);
-          } finally {
-            setLoading(false);
-          }
+          
+  //           // if (resDispense.data.error === false) {
+  //           //   setValidatePay(true);
+  //           // } else {
+  //           //   console.log("Ticket dispensing failed. Please contact support.");
+  //           // }
+  //         } catch (error) {
+  //           console.error("Ticket processing error:", error);
+  //         } finally {
+  //           setLoading(false);
+  //         }
         
-          // dispenseTickets(); // Call ticket dispensing function
+  //         // dispenseTickets(); // Call ticket dispensing function
   
-           // navigate("/success");
-          } else {
-             toast.error("Payment verification failed.");
-            // navigate("/checkout");
-          }
-          }).catch(error => {
-         console.log(error);
-          });
-        console.log(reference);
+  //          // navigate("/success");
+  //         } else {
+  //            toast.error("Payment verification failed.");
+  //           // navigate("/checkout");
+  //         }
+  //         }).catch(error => {
+  //        console.log(error);
+  //         });
+  //       console.log(reference);
         
        
        
-      } catch (error) {
-        console.error("Error verifying payment:", error);
-        toast.error("An error occurred during payment verification.");
-       // navigate("/checkout");
-      } finally {
-        setLoading(false);
-      }
-    };
+  //     } catch (error) {
+  //       console.error("Error verifying payment:", error);
+  //       toast.error("An error occurred during payment verification.");
+  //      // navigate("/checkout");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
     
-    verifyPayment();
-  }, []);
-  console.log(payres);
-  // const dispenseTickets = async () => {
+  //   verifyPayment();
+  // }, []);
+ // console.log(payres);
+ 
+
+  // const resetState = () => {
+  //   setTick([]);
+   
+   
+  // };
+ // const dispenseTickets = async () => {
   //   try {
   //     //console.log("ticketData ", ticketData);
   //     console.log("userdata ", mergedData);
@@ -187,6 +201,7 @@ const newJson={
               <span className="text-black">
                 The payment is invalid! Please contact admin.
               </span>
+              <br/>
               <button
                 onClick={() => navigate("/")}
                 className="mt-5 px-6 py-3 bg-red-600 text-white font-medium rounded-md hover:bg-red-700"
@@ -199,6 +214,7 @@ const newJson={
               <span className="text-black">
                 The tickets have been purchased successfully.
               </span>
+              <br/>
               <button
                 onClick={() => navigate("/")}
                 className="mt-5 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
@@ -206,6 +222,9 @@ const newJson={
                 Go to Homepage
               </button>
               <div className="mt-4 p-4 rounded-lg border bg-white shadow-md md:w-[700px]">
+              <span className="text-black">
+               Order Details
+              </span>
                 <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
                   {tickets.map((item, i) => (
                     <div className="flex justify-between" key={i}>
@@ -224,7 +243,7 @@ const newJson={
                     <dt className="text-base text-red-600">Subtotal</dt>
                     <dd className="text-base font-medium text-red-600">
                       <NumericFormat
-                        value={Number(data.subTotal).toFixed(2)}
+                        value={Number(subTotal).toFixed(2)}
                         displayType="text"
                         thousandSeparator
                         prefix={currency}
@@ -235,7 +254,7 @@ const newJson={
                     <dt className="text-base text-customBlack">Booking Fee</dt>
                     <dd className="text-base font-medium text-customBlack">
                       <NumericFormat
-                        value={Number(data.totalbookingFee).toFixed(2)}
+                        value={Number(totalbookingFee).toFixed(2)}
                         displayType="text"
                         thousandSeparator
                         prefix={currency}
@@ -251,7 +270,7 @@ const newJson={
                     </dt>
                     <dd className="text-base font-medium text-customBlack">
                       <NumericFormat
-                        value={Number(data.vat).toFixed(2)}
+                        value={Number(vat).toFixed(2)}
                         displayType="text"
                         thousandSeparator
                         prefix={currency}
@@ -262,7 +281,7 @@ const newJson={
                     <dt className="text-lg font-bold text-red-600">Total</dt>
                     <dd className="text-lg font-bold text-red-600">
                       <NumericFormat
-                        value={Number(data.totalAmount).toFixed(2)}
+                        value={Number(totalAmount).toFixed(2)}
                         displayType="text"
                         thousandSeparator
                         prefix={currency}

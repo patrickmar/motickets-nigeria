@@ -8,7 +8,7 @@ const ResetPassword: React.FC = () => {
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const { token } = useParams<{ token: string }>();
-  console.log(token);
+  //console.log(token);
   const navigate = useNavigate();
   const [resetPassword, { isLoading, error, isSuccess }] =
     useResetPasswordMutation();

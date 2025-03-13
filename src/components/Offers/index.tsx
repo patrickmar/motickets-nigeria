@@ -32,7 +32,7 @@ const Offers = () => {
   const carouselContainer = useRef({});
   const currency = process.env.REACT_APP_CURRENCY;
   const [endpoint, setEndpoint] = useState(currency);
-  console.log(setEndpoint);
+ // console.log(setEndpoint);
   //const { data, loading } = useFetch(`/${endpoint}/events`);
   const { loading } = useFetch(`/eventspercurrency/${endpoint}`);
 

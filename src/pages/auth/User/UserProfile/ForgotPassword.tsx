@@ -18,7 +18,7 @@ const ForgotPassword: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  console.log(user);
+  //console.log(user);
   useEffect(() => {
     if (error) {
       toast.error((error as any)?.data?.message);

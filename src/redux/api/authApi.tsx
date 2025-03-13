@@ -62,7 +62,7 @@ export const authApi = createApi({
           // dispatch(setUser(data));
           // dispatch(setIsAuthenticated(true));
         } catch (error) {
-          console.log(error);
+         // console.log(error);
         } finally {
           dispatch(setLoading(false));
         }
@@ -91,7 +91,7 @@ export const authApi = createApi({
           dispatch(setUser(data));
           dispatch(setIsAuthenticated(true));
         } catch (error) {
-          console.log(error);
+         // console.log(error);
         } finally {
           dispatch(setLoading(false));
         }

@@ -11,7 +11,7 @@ const PastEvent = () => {
   );
   //const { data, loading } = useFetch(`/eventspercategory/${endpoint}`);
   const { data, loading } = useFetch(endpoint);
-  console.log(data);
+ // console.log(data);
   const onTabChange = (tab: string) => {
     // setEndpoint(tab === "Weekly" ? "weekly" : "monthly");
     setEndpoint(tab === "This Week" ? endpoint : endpoint);

@@ -10,8 +10,8 @@ const Checkout = (props: Props) => {
   const tickets = location?.state?.tickets?.filter((i: any) => i.qty > 0) || [];
   const data = location?.state?.data || {};
 
-  console.log(data);
-  console.log(tickets);
+  //console.log(data);
+  //console.log(tickets);
 
   // Calculate the sum of the amounts
   const calculateTotalAmount = (prices: any) => {

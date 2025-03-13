@@ -60,10 +60,10 @@ const userSlice = createSlice({
       // If there's an image, update the avatar URL in the AvatarContext as well
       if (action.payload.image) {
         localStorage.setItem("avatarUrl", action.payload.image);
-        console.log(
-          "Avatar URL updated in localStorage:",
-          action.payload.image
-        );
+        // console.log(
+        //   "Avatar URL updated in localStorage:",
+        //   action.payload.image
+        // );
       }
     },
     setIsAuthenticated(state, action: PayloadAction<boolean>) {

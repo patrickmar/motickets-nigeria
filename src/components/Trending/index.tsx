@@ -11,7 +11,7 @@ const Trending = () => {
   const [endpoint, setEndpoint] = useState(`/eventspercurrency/${currency}`);
   //const { data, loading } = useFetch(`/eventspercategory/${endpoint}`);
   const { data, loading } = useFetch(endpoint);
-console.log(data);
+//console.log(data);
   // const onTabChange = (tab: string) => {
   //   setEndpoint(tab === "Week" ? "trending" : "trending");
   // };

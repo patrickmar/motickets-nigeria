@@ -36,7 +36,7 @@ const Search = (props: Props) => {
       tab === "This Week" ? `/eventspercurrency/${currency}` : `/weekly/events`
     );
   };
-  console.log(onTabChange);
+  //console.log(onTabChange);
   return (
     <Card
       title={`Search Results for ${query}`}

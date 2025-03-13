@@ -31,7 +31,7 @@ const MyEvent: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  console.log(user);
+  //console.log(user);
 
   const updateStatus = useSelector(
     (state: RootState) => state.event.updateStatus
@@ -50,9 +50,9 @@ const MyEvent: React.FC = () => {
   const navigate = useNavigate();
 
   const deleteEventHandler = async (eventid: string) => {
-    console.log("Delete button clicked for event id:", eventid); // Confirm button click
+    //console.log("Delete button clicked for event id:", eventid); // Confirm button click
     const url = `${process.env.REACT_APP_BASEURL}/delete/eventticket/${eventid}`;
-    console.log("Delete endpoint URL:", url); // Log the endpoint URL
+    //console.log("Delete endpoint URL:", url); // Log the endpoint URL
 
     try {
       const response = await fetch(url, {
@@ -64,7 +64,7 @@ const MyEvent: React.FC = () => {
       });
 
       const responseBody = await response.text();
-      console.log("Response Body:", responseBody);
+     // console.log("Response Body:", responseBody);
 
       if (!response.ok) {
         throw new Error(

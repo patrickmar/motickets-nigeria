@@ -21,7 +21,7 @@ const ProfileChange: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  console.log(user);
+ // console.log(user);
 
   useEffect(() => {
     if (user) {

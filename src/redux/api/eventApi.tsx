@@ -71,7 +71,7 @@ export const eventApi = createApi({
     updateEvent: builder.mutation({
       query({ sn, eventData }) {
         const url = `/update/eventticket/${sn}`;
-        console.log("API endpoint:", url);
+        //console.log("API endpoint:", url);
         return {
           url,
           method: "POST",
@@ -89,7 +89,7 @@ export const eventApi = createApi({
     deleteEvent: builder.mutation({
       query(sn) {
         const url = `/delete/eventticket/${sn}`;
-        console.log("Deleting event with endpoint:", url);
+        //console.log("Deleting event with endpoint:", url);
         return {
           url,
           method: "DELETE",

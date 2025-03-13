@@ -44,7 +44,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   const [selectedImage, setSelectedImage] = useState(
     newData ? newData?.imgs[0]?.img : ""
   );
-  console.log(newData?.enableseat);
+  //console.log(newData?.enableseat);
   const enableSeat = newData?.enableseat;
   const [tickets, setTickets] = useState<any>([]);
   const [bookFees, setbookFees] = useState<any>([]);
@@ -159,13 +159,13 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
     // Calculate the difference in days
     return endDateMoment.diff(startDateMoment, "days") + 1;
   };
-  console.log(newData);
+  //console.log(newData);
   const currency = getCurrency(newData);
-  console.log(currency);
+  //console.log(currency);
   const currencyName = getCurrencyName(newData);
-  console.log(currencyName);
+ // console.log(currencyName);
   const isButtonEnabled = tickets.some((item: any) => item.qty > 0);
-  console.log(currencyName);
+ // console.log(currencyName);
   const increment = (index: number) => {
     const updatedCategories = [...tickets];
     const updatedQty = [...ticketsQty];
@@ -195,7 +195,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   ) => {
     const updatedCategories = [...tickets];
     const updatedQty = [...ticketsQty];
-    console.log(updatedQty);
+    //console.log(updatedQty);
     updatedCategories[index].qty = Number(e.target.value);
 
     setTickets(updatedCategories);
@@ -212,7 +212,7 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
     const totalPrice = newBookFee + newPrice;
 
     updatedCategories[index].booking_fee = newBookFee; // 🚨 Updating state directly inside render
-    console.log(totalPrice);
+    //console.log(totalPrice);
     return newPrice;
   };
 

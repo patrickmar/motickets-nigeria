@@ -40,13 +40,13 @@ const ContactUs = () => {
         'ECfFboSu0y_L9md9N' // Replace with your actual EmailJS user ID
       );
 
-      console.log('SUCCESS!', response);
+      //console.log('SUCCESS!', response);
       toast.success('Message sent successfully');
 
       // Resetting the form fields after successful sending
       form.current.reset();
     } catch (error) {
-      console.error('FAILED...', error);
+      //console.error('FAILED...', error);
       toast.error('Failed to send message');
     }
   };

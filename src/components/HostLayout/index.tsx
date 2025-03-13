@@ -84,7 +84,7 @@ const HostLayer: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  console.log(user);
+  //console.log(user);
 
   const [updateHost, { isLoading, isSuccess, error }] = useUpdateHostMutation();
 
@@ -135,7 +135,7 @@ const HostLayer: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log("Submitting form data:", formData);
+    //console.log("Submitting form data:", formData);
 
     if (!validateSortCode(formData.sortCode)) {
       toast.error(
@@ -154,7 +154,7 @@ const HostLayer: React.FC = () => {
         ...formData,
         hostid: user?.id, // safely append user id
       };
-      console.log("Data to send:", dataToSend); // Check console to verify hostid is set
+     // console.log("Data to send:", dataToSend); // Check console to verify hostid is set
 
       await updateHost(dataToSend).unwrap();
       dispatch(setUpdateFlag(1)); // Ensure this line is executed

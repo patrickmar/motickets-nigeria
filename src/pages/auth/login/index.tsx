@@ -50,13 +50,13 @@ const Login: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  console.log(user);
+ // console.log(user);
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (error) {
       const customError = error as CustomError;
-      console.log(customError?.data?.message || "An error occurred");
+      //console.log(customError?.data?.message || "An error occurred");
     }
   }, [error]);
 
