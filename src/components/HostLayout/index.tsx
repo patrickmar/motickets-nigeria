@@ -53,9 +53,6 @@ interface User {
   phone: string;
 }
 
-// interface UserState {
-//   isAuthenticated: boolean;
-// }
 
 const HostLayer: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -127,22 +124,17 @@ const HostLayer: React.FC = () => {
   const handlePreviousStep = () => {
     setCurrentStep((prevStep) => prevStep - 1);
   };
-  const validateSortCode = (sortCode: string): boolean => {
-    // Regular expression to match sort code format: xx-xx-xx or xxxxxx
-    const sortCodeRegex = /^(\d{2}-\d{2}-\d{2}|\d{6})$/;
-    return sortCodeRegex.test(sortCode);
-  };
+  // const validateSortCode = (sortCode: string): boolean => {
+  //   // Regular expression to match sort code format: xx-xx-xx or xxxxxx
+  //   const sortCodeRegex = /^(\d{2}-\d{2}-\d{2}|\d{6})$/;
+  //   return sortCodeRegex.test(sortCode);
+  // };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     //console.log("Submitting form data:", formData);
 
-    if (!validateSortCode(formData.sortCode)) {
-      toast.error(
-        "Invalid sort code. Sort code should be in format xx-xx-xx or xxxxxx"
-      );
-      return;
-    }
+    
 
     if (!isValidPhoneNumber(formData.phone)) {
       toast.error("Invalid phone number");
@@ -435,7 +427,7 @@ const HostLayer: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="sm:col-span-3">
+                {/* <div className="sm:col-span-3">
                   <label
                     htmlFor="sortCode"
                     className="block text-sm font-medium leading-6 text-gray-900"
@@ -453,7 +445,7 @@ const HostLayer: React.FC = () => {
                       required
                     />
                   </div>
-                </div>
+                </div> */}
 
                 <div className="sm:col-span-3">
                   <label

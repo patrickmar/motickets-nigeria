@@ -362,7 +362,6 @@ const EditEventForm: React.FC = () => {
           lastModified: selectedImages[i].lastModified,
         });
         formData.append("banner[]", banner);
-        // console.log(`Renamed Image: ${banner.name}`);
       }
 
       const logObject: { [key: string]: any } = {};
