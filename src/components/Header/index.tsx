@@ -48,7 +48,7 @@ const Header: React.FC = () => {
   const [mobileMenu, setMobileMenu] = useState<boolean>(false);
   const [query, setQuery] = useState<string>("");
   const [isVisible, setIsVisible] = useState(false);
- // console.log(query);
+  console.log(query);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -64,14 +64,8 @@ const Header: React.FC = () => {
   // console.log("User:", user);
   // console.log("isAuthenticated:", isAuthenticated);
   // console.log("hostid:", hostid);
-
- // console.log(setQuery);
-
-  // useEffect(() => {
-  //   if (!hostid) {
-  //     navigate("/login");
-  //   }
-  // }, [hostid, navigate]);
+  // console.log(avatarUrl);
+  // console.log(setQuery);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -124,9 +118,10 @@ const Header: React.FC = () => {
   const closeDropdown = () => {
     setIsVisible(false);
   };
+  // console.log("Avatar URL before rendering:", avatarUrl);
 
   const handleLogout = () => {
-    setAvatarUrl(default_avatar); // Reset to default avatar
+    setAvatarUrl(default_avatar);
     localStorage.removeItem("avatarUrl");
     dispatch(logout());
     navigate("/");
