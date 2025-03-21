@@ -18,81 +18,58 @@ const Card = ({ data, loading, title }: Props) => {
   const navigate = useNavigate();
 
   const currency = data && getCurrency(data[0]);
-  // const filteredData =  data.filter((item:any) =>
-  // item.currency.includes('GBP')
-  // );
-
-  // console.log(filteredData);
-  const SkItem = () => {
-    return (
-      <div className="skeletonItem mb-5">
-        <div className="posterBlock skeleton"></div>
-        <div className="textBlock">
-          <div className="title skeleton"></div>
-          <div className="date skeleton"></div>
-        </div>
-      </div>
-    );
-  };
 
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
-      <div className="carousel">
-        <ContentWrapper>
-          {title && <div className="carouselTitle">{title}</div>}
-          {!loading ? (
-            <div className="cardItems">
-              <div className="mt-6 grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-5 xl:gap-x-8">
-                {data?.map((item: any, i: number) => {
-                  const posterUrl = item?.imgs[0]?.img
-                    ? imageURL + item.imgs[0].img
-                    : PosterFallback;
-                  return (
-                    <div
-                      key={i}
-                      className="cardItem"
-                      onClick={() => navigate(`/details/${item.slug}`)}
-                    >
-                      <div className="posterBlock">
-                        <Img src={posterUrl} alt="anotherone" />
-                        <Tags data={getTags(item?.tags).slice(0, 2)} />
-                      </div>
-                      <div className="textBlock">
-                        <span className="title">{item.title}</span>
-                        <p className="text-lg font-medium text-white">
-                          <PriceSelection
-                            ticketCategories={item.ticketCategories}
-                            currency={currency as string}
-                          />
-                        </p>
-                        <span className="date">
-                          {moment(item.from_date).format("MMM D, YYYY.")}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
+    <div className="bg-[#f9f9f9]  py-10">
+      {title && <h3 className="text-dark text-2xl p-12  ">{title}</h3>}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-12 ">
+        {!loading
+          ? data?.map((item: any, index: number) => {
+              const posterUrl = item?.imgs[0]?.img
+                ? imageURL + item.imgs[0].img
+                : PosterFallback;
+
+              return (
+                <div
+                  key={index}
+                  className="flex flex-col rounded-lg bg-white text-surface shadow-secondary-1 dark:bg-surface-dark dark:text-white transition-opacity"
+                  onClick={() => navigate(`/details/${item.slug}`)}
+                >
+                  <Img
+                    className="rounded-t-lg w-full h-48 object-cover"
+                    src={posterUrl}
+                    alt={item.title || "Event Image"}
+                  />
+                  <div className="p-6">
+                    <h5 className="mb-2 text-xl font-medium leading-tight">
+                      {item.title}
+                    </h5>
+                    <p className="text-lg font-medium text-dark">
+                      <PriceSelection
+                        ticketCategories={item.ticketCategories}
+                        currency={currency as string}
+                      />
+                    </p>
+                    <p className="text-base text-gray-600">
+                      {moment(item.from_date).format("MMM D, YYYY")}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
+          : [...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className="animate-pulse flex flex-col rounded-lg bg-gray-300 dark:bg-gray-700"
+              >
+                <div className="h-48 bg-gray-400 dark:bg-gray-600 rounded-t-lg"></div>
+                <div className="p-6 space-y-4">
+                  <div className="h-4 bg-gray-400 rounded"></div>
+                  <div className="h-4 bg-gray-400 rounded w-3/4"></div>
+                  <div className="h-4 bg-gray-400 rounded w-1/2"></div>
+                </div>
               </div>
-            </div>
-          ) : (
-            <>
-              <div className="loadingSkeleton">
-                {<SkItem />}
-                {<SkItem />}
-                {<SkItem />}
-                {<SkItem />}
-                {<SkItem />}
-              </div>
-              <div className="loadingSkeleton my-3">
-                {<SkItem />}
-                {<SkItem />}
-                {<SkItem />}
-                {<SkItem />}
-                {<SkItem />}
-              </div>
-            </>
-          )}
-        </ContentWrapper>
+            ))}
       </div>
     </div>
   );

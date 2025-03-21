@@ -5,7 +5,7 @@ type Props = {
 };
 
 const ContentWrapper = ({ children }: Props) => {
-  return <div className="contentWrapper">{children}</div>;
+  return <div className="contentWrapper ">{children}</div>;
 };
 
 export default ContentWrapper;

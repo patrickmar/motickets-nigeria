@@ -229,6 +229,10 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
     });
   };
 
+  const eventData = data?.data?.[0];
+  const isPastEvent =
+    eventData && moment(eventData.from_date).isBefore(moment(), "day");
+
   return (
     <div className="detailsBanner  ">
       {!loading ? (
@@ -319,6 +323,11 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                       <div className="description">
                         {convertHTMLCode(newData?.des)}
                       </div>
+                      {isPastEvent && (
+                        <div className="text-red-600 mt-8 justify-center flex">
+                          Event no longer available for booking
+                        </div>
+                      )}
                     </div>
 
                     {/* {tags?.length > 0 && (
@@ -497,8 +506,12 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                           <div className="mt-6">
                             <button
                               onClick={goToCheckout}
-                              disabled={!isButtonEnabled}
+                              disabled={isPastEvent || !isButtonEnabled}
                               className={`${
+                                isPastEvent
+                                  ? "opacity-50 cursor-not-allowed"
+                                  : ""
+                              } ${
                                 !isButtonEnabled ? "disabled" : ""
                               } flex w-full items-center justify-center  rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
                             >

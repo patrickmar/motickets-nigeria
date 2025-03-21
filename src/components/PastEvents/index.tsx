@@ -26,17 +26,10 @@ export default function CardBlogAction() {
                 ? imageURL + item.imgs[0].img
                 : PosterFallback;
 
-              const isPastEvent = moment(item.from_date).isBefore(
-                moment(),
-                "day"
-              );
-
               return (
                 <div
                   key={index}
-                  className={`flex flex-col rounded-lg bg-white text-surface shadow-secondary-1 dark:bg-surface-dark dark:text-white transition-opacity ${
-                    isPastEvent ? "opacity-50 pointer-events-none" : ""
-                  }`}
+                  className="flex flex-col rounded-lg bg-white text-surface shadow-secondary-1 dark:bg-surface-dark dark:text-white transition-opacity"
                 >
                   <Link to={`/details/${item.slug}`}>
                     <Img

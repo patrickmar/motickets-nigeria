@@ -128,14 +128,14 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className={`header ${show} ${mobileMenu ? "mobileView" : ""}`}>
+    <header className={`header  ${show} ${mobileMenu ? "mobileView" : ""}`}>
       <ContentWrapper>
         <div className="logo" onClick={() => navigate("/")}>
           <img src={logo} alt="Motickets logo" />
         </div>
 
         {/* Menu Items */}
-        <ul className={`menuItems ${mobileMenu ? "mobileMenuVisible" : ""}`}>
+        <ul className={`menuItems  ${mobileMenu ? "mobileMenuVisible" : ""}`}>
           <li className="menuItem" onClick={() => navigationHandler("/")}>
             Home
           </li>
