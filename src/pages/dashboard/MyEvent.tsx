@@ -31,7 +31,6 @@ const MyEvent: React.FC = () => {
   const user = useSelector(
     (state: RootState) => state.auth.user
   ) as User | null;
-  //console.log(user);
 
   const updateStatus = useSelector(
     (state: RootState) => state.event.updateStatus
@@ -64,7 +63,7 @@ const MyEvent: React.FC = () => {
       });
 
       const responseBody = await response.text();
-     // console.log("Response Body:", responseBody);
+      // console.log("Response Body:", responseBody);
 
       if (!response.ok) {
         throw new Error(
@@ -88,11 +87,13 @@ const MyEvent: React.FC = () => {
   };
 
   const eventList: Event[] = events?.data || [];
+  console.log(events?.data);
 
   return (
     <div className="container mx-auto">
       <div className="flex flex-wrap -mx-2">
         {eventList.map((event: Event) => {
+          console.log(eventList);
           const { minPrice, maxPrice } = getPriceRange(event.ticketCategories);
           return (
             <div key={event.sn} className="w-full sm:w-1/2 md:w-1/3 px-2 mb-4">

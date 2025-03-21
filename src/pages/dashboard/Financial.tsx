@@ -1,156 +1,110 @@
-// FinancialTable.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../redux/store";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { title } from "process";
 
-
+interface TicketCategory {
+  id: string;
+  event_id: string;
+  name: string;
+  price: string;
+  booking_fee: string;
+  discount_price: string;
+  wallet_discount: string;
+  quantity: string;
+  initial_quantity: string;
+  noofpeople: string;
+  cat_Image: string;
+  Currency: string;
+}
 
 const FinancialTable: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { sn } = useParams();
+  const [tickets, setTickets] = useState<TicketCategory[]>([]);
+  const title = location.state?.title || "Sales Report"; // Get title from state
+
+  console.log(sn);
+  useEffect(() => {
+    if (sn) {
+      fetch(
+        `https://moloyal.com/test/mosave-ng/script/api/eventhost/sales_report/${sn}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          setTickets(data);
+        })
+        .catch((error) => console.error("Error fetching data:", error));
+    }
+  }, [sn]);
+
   return (
     <div className="tabular--wrapper">
-      {/* <h3 className="main--title">Finance data</h3> */}
       <div className="table-container">
-        <h1 className="pt-8 text-xl">Sales</h1>
+        <h1 className="pt-8 text-xl text-[#25aae1]">
+          {title} -- Sales Report{" "}
+        </h1>
         <table>
           <thead className="bg-[#25aae1]">
             <tr>
-              <th>Category </th>
+              <th>Category</th>
               <th>Price</th>
+              <th>Booking Fee</th>
               <th>Total Quantity</th>
               <th>Sold Tickets</th>
               <th>Available Tickets</th>
               <th>Pay Out Due</th>
-              {/* <th>Pay Due After Refund</th> */}
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td>Regular</td>
-              <td>$50</td>
-              <td>200</td>
-              <td>200</td>
-              <td>2</td>
-              <td>$20000</td>
-              {/* <td>
-                <button>Edit</button>
-              </td> */}
-            </tr>
-            <tr>
-              <td>VIP</td>
-              <td>$80</td>
-              <td>1500</td>
-              <td>150</td>
-              <td>0</td>
-              <td>$30000</td>
-              {/* <td>
-                <button>Edit</button>
-              </td> */}
-            </tr>
-            <tr>
-              <td>VVIP</td>
-              <td>$100</td>
-              <td>5000</td>
-              <td>2000</td>
-              <td>0</td>
-              <td>$23000</td>
-              {/* <td>
-                <button>Edit</button>
-              </td> */}
-            </tr>
+            {tickets.map((ticket) => {
+              const price = parseFloat(ticket.price);
+              const bookingFee = parseFloat(ticket.booking_fee);
+              const initialQuantity = parseInt(ticket.initial_quantity, 10);
+              const availableQuantity = parseInt(ticket.quantity, 10);
+              const soldTickets = initialQuantity - availableQuantity;
+              const payoutDue = soldTickets * (price - bookingFee);
+
+              return (
+                <tr key={ticket.id}>
+                  <td>{ticket.name}</td>
+                  <td>₦{price.toFixed(2)}</td>
+                  <td>₦{bookingFee.toFixed(2)}</td>
+                  <td>{initialQuantity}</td>
+                  <td>{soldTickets}</td>
+                  <td>{availableQuantity}</td>
+                  <td>₦{payoutDue.toFixed(2)}</td>
+                </tr>
+              );
+            })}
           </tbody>
           <tfoot className="bg-[#25aae1]">
             <tr>
-              <td colSpan={7}>Total Amount: $3,700</td>
+              <td colSpan={7}>
+                Total Amount: ₦
+                {tickets
+                  .reduce((total, ticket) => {
+                    const price = parseFloat(ticket.price);
+                    const bookingFee = parseFloat(ticket.booking_fee);
+                    const soldTickets =
+                      parseInt(ticket.initial_quantity, 10) -
+                      parseInt(ticket.quantity, 10);
+                    return total + soldTickets * (price - bookingFee);
+                  }, 0)
+                  .toFixed(2)}
+              </td>
             </tr>
           </tfoot>
         </table>
-      </div>
-      <div className="table-container">
-        <h1 className="pt-8 text-xl">Refunds</h1>
-        <table>
-          <thead className="bg-[#25aae1]">
-            <tr>
-              <th>Ticket Category Refunded </th>
-              <th>Price</th>
-              <th>Quantity Refunded</th>
-              <th>Refunds</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>Regular</td>
-              <td>$15</td>
-              <td>3</td>
-              <td>$45</td>
-            </tr>
-            <tr>
-              <td>VIP</td>
-              <td>$20</td>
-              <td>1</td>
-              <td>$20</td>
-            </tr>
-          </tbody>
-          <tfoot className="bg-[#25aae1]">
-            <tr>
-              <td colSpan={7}>Total Refunded: $65</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <div className="table-container">
-        <h1 className="pt-8 text-xl">Sales After Refunds</h1>
-        <table>
-          <thead className="bg-[#25aae1]">
-            <tr>
-              <th>Payouts Due After Refunds </th>
-              <th>$3,700</th>
-            </tr>
-          </thead>
-        </table>
-      </div>
-      <div className="table-container">
-        <h1 className="pt-8 text-xl">Payouts</h1>
-        <table>
-          <thead className="bg-[#25aae1]">
-            <tr>
-              <th>Date of Payouts </th>
-              <th>Amount Paid Out</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>20 - March - 2024</td>
-              <td>$50</td>
-            </tr>
-            <tr>
-              <td>26 - March-2024</td>
-              <td>$150</td>
-            </tr>
-            <tr>
-              <td>29 - March-2024</td>
-              <td>$1500</td>
-            </tr>
-          </tbody>
-          <tfoot className="bg-[#25aae1]">
-            <tr>
-              <td colSpan={7}>Payouts Made: $1700</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <div className="table-container pt-8">
-        <table>
-          <thead className="bg-[#25aae1]">
-            <tr>
-              <th>Due Date </th>
-              <th>Payout Due</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>08 - April - 2024</td>
-              <td>$2050.00</td>
-            </tr>
-          </tbody>
-        </table>
+        <button
+          onClick={() => navigate("/dashboard#")}
+          className="py-2 px-6 bg-[#c10006]"
+        >
+          Back to dashboard
+        </button>
       </div>
     </div>
   );

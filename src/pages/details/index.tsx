@@ -11,6 +11,7 @@ const Details = (props: Props) => {
   const { id } = useParams();
   //console.log(id);
   const { data, loading, error } = useFetch(`/event_slug/${id}`);
+  console.log(data);
   return (
     <div className="">
       <DetailsBanner id={id} data={data} loading={loading} error={error} />

@@ -9,16 +9,16 @@ import { Link } from "react-router-dom";
 export default function CardBlogAction() {
   const currency = process.env.REACT_APP_CURRENCY;
   const [endpoint, setEndpoint] = useState(
-    `/eventspercurrency/${currency}`
+    `/pasteventspercurrency/${currency}`
   );
-  const { data, loading } = useFetch(endpoint); // Fetch data from the API
-  const eventData = data?.data; // Ensure you access the correct array
-
+  const { data, loading } = useFetch(endpoint);
+  const eventData = data?.data;
   const imageURL = process.env.REACT_APP_IMAGEURL;
 
+  console.log("Event Data:", eventData);
   return (
     <div className="bg-[#f9f9f9]">
-      <h3 className="text-dark text-2xl p-12">Explore Events</h3>
+      <h3 className="text-dark text-2xl p-12">Past Events</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 px-12">
         {!loading
           ? eventData?.map((item: any, index: number) => {
@@ -26,10 +26,17 @@ export default function CardBlogAction() {
                 ? imageURL + item.imgs[0].img
                 : PosterFallback;
 
+              const isPastEvent = moment(item.from_date).isBefore(
+                moment(),
+                "day"
+              );
+
               return (
                 <div
                   key={index}
-                  className="flex flex-col rounded-lg bg-white text-surface shadow-secondary-1 dark:bg-surface-dark dark:text-white"
+                  className={`flex flex-col rounded-lg bg-white text-surface shadow-secondary-1 dark:bg-surface-dark dark:text-white transition-opacity ${
+                    isPastEvent ? "opacity-50 pointer-events-none" : ""
+                  }`}
                 >
                   <Link to={`/details/${item.slug}`}>
                     <Img
@@ -51,15 +58,11 @@ export default function CardBlogAction() {
                     <p className="text-base text-gray-600">
                       {moment(item.from_date).format("MMM D, YYYY")}
                     </p>
-                    {/* <p className="mt-4 text-base text-gray-800">
-                      {item.description || "No description available."}
-                    </p> */}
                   </div>
                 </div>
               );
             })
-          : // Render skeletons during loading
-            [...Array(6)].map((_, i) => (
+          : [...Array(6)].map((_, i) => (
               <div
                 key={i}
                 className="animate-pulse flex flex-col rounded-lg bg-gray-300 dark:bg-gray-700"

@@ -31,6 +31,7 @@ import ForgotPassword from "./pages/auth/User/UserProfile/ForgotPassword";
 import EditEventForm from "./pages/dashboard/EditEventForm";
 import AvatarUploadForm from "./pages/auth/User/UserProfile/AvatarUploadForm";
 import ResetPassword from "./pages/auth/User/UserProfile/ResetPassword";
+import FinancialTable from "./pages/dashboard/Financial";
 
 function App() {
   // const { isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -60,6 +61,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/financial-report/:sn" element={<FinancialTable />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/contact-us" element={<ContactUs />} />

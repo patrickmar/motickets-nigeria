@@ -163,9 +163,9 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   const currency = getCurrency(newData);
   //console.log(currency);
   const currencyName = getCurrencyName(newData);
- // console.log(currencyName);
+  // console.log(currencyName);
   const isButtonEnabled = tickets.some((item: any) => item.qty > 0);
- // console.log(currencyName);
+  // console.log(currencyName);
   const increment = (index: number) => {
     const updatedCategories = [...tickets];
     const updatedQty = [...ticketsQty];

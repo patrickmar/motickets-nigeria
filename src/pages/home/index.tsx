@@ -1,5 +1,5 @@
 import HeroBanner from "../../components/HeroBanner";
-// import PastEvent from "../../components/PastEvents";
+import PastEvent from "../../components/PastEvents";
 import CardBlogAction from "../../components/CardBlogAction";
 // import TopRated from "../../components/TopRated";
 // import Trending from "../../components/Trending";
@@ -15,7 +15,7 @@ const Home = (props: Props) => {
       <CardBlogAction />
       {/* <Offers /> */}
       {/* <Trending /> */}
-      {/* <PastEvent /> */}
+      <PastEvent />
       {/* <TopRated /> */}
       <ToastContainer />
     </div>

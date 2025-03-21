@@ -34,6 +34,15 @@ const Dashboard: React.FC = () => {
   ) as User | null;
   const hostid = user?.id || "";
 
+  const [selectedEvent, setSelectedEvent] = useState<{
+    id: string;
+    title: string;
+  } | null>(null);
+
+  const handleViewReport = (event: { id: string; title: string }) => {
+    setSelectedEvent(event); // Update event when a card is clicked
+  };
+
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
