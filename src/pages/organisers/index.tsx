@@ -476,7 +476,41 @@ function Organisers() {
                           d="M4.5 12.75l6 6 9-13.5"
                         />
                       </svg>
-                      £0.39 fee per free ticket after 100 tickets.
+                      50K for forst 100 registrations.
+                    </li>
+                    <li className="mb-4 flex">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        className="mr-3 h-5 w-5 text-[#25aae1] dark:text-primary-400"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      30k for every subsequent 100 registrations.
+                    </li>
+                    <li className="mb-4 flex">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        className="mr-3 h-5 w-5 text-[#25aae1] dark:text-primary-400"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      Dedicated customize event page.
                     </li>
                     <li className="mb-4 flex">
                       <svg
@@ -507,7 +541,7 @@ function Organisers() {
                     <strong>Standard (Paid Events)</strong>
                   </p>
                   <h3 className="mb-6 text-3xl">
-                    <strong className="text-black">5% +£0.49</strong>
+                    <strong className="text-black">10% Commision</strong>
                     <small>/Ticket</small>
                   </h3>
                   <button
@@ -537,7 +571,58 @@ function Organisers() {
                           d="M4.5 12.75l6 6 9-13.5"
                         />
                       </svg>
-                      Audience Analytics
+                      Dedicated event page
+                    </li>
+                    <li className="mb-4 flex">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        className="mr-3 h-5 w-5 text-[#25aae1] dark:text-primary-400"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      Customer loyalty points
+                    </li>
+                    <li className="mb-4 flex">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        className="mr-3 h-5 w-5 text-[#25aae1] dark:text-primary-400"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      Tickets sales report
+                    </li>
+                    <li className="mb-4 flex">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="2"
+                        stroke="currentColor"
+                        className="mr-3 h-5 w-5 text-[#25aae1] dark:text-primary-400"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M4.5 12.75l6 6 9-13.5"
+                        />
+                      </svg>
+                      Post on Moloyal social media
                     </li>
                     <li className="mb-4 flex">
                       <svg
