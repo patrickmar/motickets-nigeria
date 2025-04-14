@@ -425,7 +425,12 @@ const CreateEventForm: React.FC = () => {
       const data = await response.json();
       if (data.error === false) {
         toast.success(data.message);
-        navigate("/dashboard");
+        navigate("/dashboard", {
+          state: {
+            selectedMenu: "Event",
+            selectedEventOption: "MyEvent",
+          },
+        });
       } else {
         throw new Error(data.message || "Unknown error");
       }

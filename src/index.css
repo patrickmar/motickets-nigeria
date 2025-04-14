@@ -3,9 +3,6 @@
 @tailwind utilities;
 
 @layer utilities {
-  /* .animate-mobileMenu {
-    @apply mobileMenuAnimation
-  } */
 }
 
 .mobileMenuAnimation {
@@ -108,18 +105,6 @@
   @apply text-lg w-full h-auto p-4;
 }
 
-/* .searchBar {
-  @apply w-full h-16 bg-white absolute top-16 animate-[mobileMenu]
-}
-
-.searchInput svg {
-  @apply text-lg flex-shrink-0 ml-10 cursor-pointer
-} */
-
-/* .searchInput input {
-  @apply w-full h-48 bg-white outline-none border-0 rounded-tl-[30] rounded-bl-[30] p-4 text-sm md:h-60 md:text-lg md:p-0
-} */
-
 @keyframes mobileMenu {
   0% {
     transform: translateY(-130%);
@@ -159,7 +144,6 @@
 }
 
 .heroBanner .opacity-layer {
-  /* background: linear-gradient(180deg, rgba(4, 21, 45, 0) 0%, #04152d 79.17%); */
   @apply h-[250px] w-full absolute bottom-0 left-0;
 }
 
@@ -186,18 +170,6 @@
 .heroBanner .heroBannerContent .searchInput button {
   @apply w-[100px] h-[50px] bg-red-600 outline-0 text-base cursor-pointer md:h-[60px] md:w-[150px] md:text-lg rounded-tr-[30px] rounded-br-[30px];
 }
-
-/* .carouselSection {
-  @apply relative mb-[70px];
-} */
-
-/* .carouselSection .contentWrapper {
-  @apply flex items-center justify-between mb-[20px];
-} */
-
-/* .carouselSection .carouselTitle {
-  @apply text-2xl text-white font-normal;
-} */
 
 .switchingTabs {
   @apply h-[34px] bg-white rounded-[20px] p-[2px];

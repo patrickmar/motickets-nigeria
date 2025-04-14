@@ -6,7 +6,7 @@ import CreateEventForm from "../create";
 import Financial from "./Financial";
 import TermsAndConditions from "../terms";
 import MyEvent from "./MyEvent";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import FinancialCard from "./FinancialCard";
 import EditProfile from "./EditProfile"; // Import the new EditProfile component
 import { useAvatar } from "../../context/AvatarContext";
@@ -19,6 +19,8 @@ interface User {
 }
 
 const Dashboard: React.FC = () => {
+  const location = useLocation();
+
   const [selectedMenu, setSelectedMenu] = useState<string>("Dashboard");
   const [selectedEventOption, setSelectedEventOption] =
     useState<string>("CreateEvent");
@@ -42,6 +44,15 @@ const Dashboard: React.FC = () => {
   const handleViewReport = (event: { id: string; title: string }) => {
     setSelectedEvent(event); // Update event when a card is clicked
   };
+
+  useEffect(() => {
+    if (location.state?.selectedMenu) {
+      setSelectedMenu(location.state.selectedMenu);
+    }
+    if (location.state?.selectedEventOption) {
+      setSelectedEventOption(location.state.selectedEventOption);
+    }
+  }, [location.state]);
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
