@@ -139,7 +139,7 @@ const TermsAndConditions = () => {
                 <div className="bg-indigo-100 p-5 px-10 w-full flex items-center">
                   <p className="text-gray-700 text-sm">
                     While a mobile app is in development, for now, you can find
-                    events and manage tickets at https://motickets.co.uk/events.
+                    events and manage tickets at https://motickets.ng/events.
                   </p>
                 </div>
                 <div

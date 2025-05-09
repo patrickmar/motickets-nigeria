@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const AcceptableUsePolicy = () => {
   return (
@@ -194,8 +194,8 @@ const AcceptableUsePolicy = () => {
       <br></br>
       28. Atendi Ltd is a company incorporated in with registered number
       14185160 whose registered address is 150 Midsummer Boulevard, Milton
-      Keynes, MK9 1FD and it operates the Website www.motickets.co.uk. You can
-      contact Atendi Ltd by email on help@motickets.co.uk.
+      Keynes, MK9 1FD and it operates the Website www.motickets.ng. You can
+      contact Atendi Ltd by email on help@motickets.ng.
     </div>
   );
 };

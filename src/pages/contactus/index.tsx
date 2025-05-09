@@ -1,9 +1,9 @@
-import { useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import emailjs from 'emailjs-com';
-import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import emailjs from "emailjs-com";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ReCAPTCHA from "react-google-recaptcha";
 
 const ContactUs = () => {
   const form = useRef<HTMLFormElement>(null); // Initialize as null
@@ -13,7 +13,7 @@ const ContactUs = () => {
     e.preventDefault();
 
     if (!isCaptchaVerified) {
-      toast.error('Please verify that you are not a robot.');
+      toast.error("Please verify that you are not a robot.");
       return;
     }
 
@@ -28,26 +28,26 @@ const ContactUs = () => {
     // Checking if the entered email matches the email pattern
     if (!emailPattern.test(userEmail)) {
       // Display error toast if email is not valid
-      toast.error('Please enter a valid email address');
+      toast.error("Please enter a valid email address");
       return;
     }
 
     try {
       const response = await emailjs.sendForm(
-        'service_nn4ceuv',
-        'template_3hmj172',
+        "service_nn4ceuv",
+        "template_3hmj172",
         form.current,
-        'ECfFboSu0y_L9md9N' // Replace with your actual EmailJS user ID
+        "ECfFboSu0y_L9md9N" // Replace with your actual EmailJS user ID
       );
 
       //console.log('SUCCESS!', response);
-      toast.success('Message sent successfully');
+      toast.success("Message sent successfully");
 
       // Resetting the form fields after successful sending
       form.current.reset();
     } catch (error) {
       //console.error('FAILED...', error);
-      toast.error('Failed to send message');
+      toast.error("Failed to send message");
     }
   };
   const handleCaptchaChange = (value: string | null) => {
@@ -208,12 +208,12 @@ const ContactUs = () => {
             <h2 className="text-5xl font-bold tracking-tight text-[#25aae1]">
               Contact Us
             </h2>
-            <p className="mt-6 text-sm leading-6 text-white">
+            <p className="mt-6 text-sm leading-6 text-gray-500">
               Got a query or need assistance? Whether you're an event organiser,
               partner, or customer buying tickets, MoTickets is here to help.
               Don't hesitate to get in touch for inquiries, technical support,
               or collaboration opportunities using the contact details provided
-              below.{' '}
+              below.{" "}
             </p>
             <dl className="mt-10 space-y-4 text-base leading-7 text-gray-600">
               <div className="flex gap-x-4">
@@ -237,18 +237,18 @@ const ContactUs = () => {
                 </dt>
                 <dd>
                   <a
-                    className="hover:text-white text-white"
-                    href="mailto:help@motickets.co.uk"
+                    className="hover:text-white text-gray-500"
+                    href="mailto: help@motickets.ng "
                   >
                     Email Us:
                   </a>
-                  <p className="text-white">
-                    Sales & Partnership Queries - sales@motickets.co.uk
+                  <p className="text-gray-500">
+                    Sales & Partnership Queries - help@motickets.ng
                   </p>
-                  <p className="text-white">
-                    Customer Support Queries -{' '}
-                    <Link to={''}>Mail: help@motickets.co.uk</Link>
-                    help@motickets.co.uk
+                  <p className="text-gray-500">
+                    Customer Support Queries -{" "}
+                    <Link to={""}>Mail: help@motickets.ng </Link>
+                    help@motickets.ng
                   </p>
                 </dd>
               </div>
@@ -263,35 +263,35 @@ const ContactUs = () => {
                     height="12"
                     viewBox="0 0 256 256"
                     xmlSpace="preserve"
-                    className="h-11 w-12 text-white bg-[#25aae1] p-4 rounded-full"
+                    className="h-11 w-12 text-gray-500 bg-[#25aae1] p-4 rounded-full"
                   >
                     <defs></defs>
                     <g
                       style={{
-                        stroke: 'none',
-                        strokeWidth: '0',
-                        strokeDasharray: 'none',
-                        strokeLinecap: 'butt',
-                        strokeLinejoin: 'miter',
-                        strokeMiterlimit: '10',
-                        fill: 'none',
-                        fillRule: 'nonzero',
-                        opacity: '1',
+                        stroke: "none",
+                        strokeWidth: "0",
+                        strokeDasharray: "none",
+                        strokeLinecap: "butt",
+                        strokeLinejoin: "miter",
+                        strokeMiterlimit: "10",
+                        fill: "none",
+                        fillRule: "nonzero",
+                        opacity: "1",
                       }}
                       transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)"
                     >
                       <path
                         d="M 45 90 c -1.415 0 -2.725 -0.748 -3.444 -1.966 l -4.385 -7.417 C 28.167 65.396 19.664 51.02 16.759 45.189 c -2.112 -4.331 -3.175 -8.955 -3.175 -13.773 C 13.584 14.093 27.677 0 45 0 c 17.323 0 31.416 14.093 31.416 31.416 c 0 4.815 -1.063 9.438 -3.157 13.741 c -0.025 0.052 -0.053 0.104 -0.08 0.155 c -2.961 5.909 -11.41 20.193 -20.353 35.309 l -4.382 7.413 C 47.725 89.252 46.415 90 45 90 z"
                         style={{
-                          stroke: 'none',
-                          strokeWidth: '1',
-                          strokeDasharray: 'none',
-                          strokeLinecap: 'butt',
-                          strokeLinejoin: 'miter',
-                          strokeMiterlimit: '10',
-                          fill: 'rgb(255,255,255)', // White fill color
-                          fillRule: 'nonzero',
-                          opacity: '1',
+                          stroke: "none",
+                          strokeWidth: "1",
+                          strokeDasharray: "none",
+                          strokeLinecap: "butt",
+                          strokeLinejoin: "miter",
+                          strokeMiterlimit: "10",
+                          fill: "rgb(255,255,255)", // White fill color
+                          fillRule: "nonzero",
+                          opacity: "1",
                         }}
                         transform=" matrix(1 0 0 1 0 0) "
                         strokeLinecap="round"
@@ -299,15 +299,15 @@ const ContactUs = () => {
                       <path
                         d="M 45 45.678 c -8.474 0 -15.369 -6.894 -15.369 -15.368 S 36.526 14.941 45 14.941 c 8.474 0 15.368 6.895 15.368 15.369 S 53.474 45.678 45 45.678 z"
                         style={{
-                          stroke: 'none',
-                          strokeWidth: '1',
-                          strokeDasharray: 'none',
-                          strokeLinecap: 'butt',
-                          strokeLinejoin: 'miter',
-                          strokeMiterlimit: '10',
-                          fill: 'rgb(255,255,255)', // White fill color
-                          fillRule: 'nonzero',
-                          opacity: '1',
+                          stroke: "none",
+                          strokeWidth: "1",
+                          strokeDasharray: "none",
+                          strokeLinecap: "butt",
+                          strokeLinejoin: "miter",
+                          strokeMiterlimit: "10",
+                          fill: "rgb(255,255,255)", // White fill color
+                          fillRule: "nonzero",
+                          opacity: "1",
                         }}
                         transform=" matrix(1 0 0 1 0 0) "
                         strokeLinecap="round"
@@ -315,17 +315,16 @@ const ContactUs = () => {
                     </g>
                   </svg>
                 </dt>
-                <p className="text-white">
+                <p className="text-gray-500">
                   66 <br />
                   Bode Thomas, Surulere <br />
-                  
                   <br></br>
                   Lagos <br />
                   Nigeria
                 </p>
               </div>
             </dl>
-            <p className="text-white mt-8 leading-6">
+            <p className="text-gray-500 mt-8 leading-6">
               Hey there! Before you reach out, have you checked our
               <br /> FAQs? They're packed with helpful info!
             </p>

@@ -155,7 +155,7 @@ const PrivacyPolicy = () => {
       13. Technical and organisational measures include measures to deal with
       any suspected data breach. If you suspect any misuse or loss or
       unauthorised access to your Data, please let us know immediately by
-      contacting us via this e-mail address: help@motickets.co.uk.
+      contacting us via this e-mail address: help@motickets.ng.
       <br></br>
       14. If you want detailed information from Get Safe Online on how to
       protect your information and your computers and devices against fraud,
@@ -203,7 +203,7 @@ const PrivacyPolicy = () => {
       18. To make enquiries, exercise any of your rights set out above, or
       withdraw your consent to the processing of your Data (where consent is our
       legal basis for processing your Data), please contact us via this e-mail
-      address: help@motickets.co.uk.
+      address: help@motickets.ng.
       <br></br>
       19. If you are not satisfied with the way a complaint you make in relation
       to your Data is handled by us, you may be able to refer your complaint to
@@ -316,7 +316,7 @@ const PrivacyPolicy = () => {
       will be immediately posted on the Website and you are deemed to have
       accepted the terms of the Privacy Policy on your first use of the Website
       following the alterations. You may contact Atendi Ltd. by email at
-      help@motickets.co.uk.
+      help@motickets.ng.
       <br></br>
       <br></br>
       This Privacy Policy was created on 01 February 2024.

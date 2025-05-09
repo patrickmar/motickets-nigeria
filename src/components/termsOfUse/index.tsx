@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 const TermsOfUse = () => {
   return (
@@ -17,14 +17,14 @@ const TermsOfUse = () => {
       (‘We’). We are registered in England and Wales under company number
       14185160 and have our registered office at 150 Midsummer Boulevard, Milton
       Keynes, MK9 1FD, England. We are a limited company. <br></br>
-      2.2. To contact us, please email help@motickets.co.uk or telephone our
+      2.2. To contact us, please email help@motickets.ng or telephone our
       customer service line on +441908103520. <br></br> <br />
       3. By using our site you accept these terms
       <br></br>
       3.1. By using our site, you confirm that you accept these terms of use and
       that you agree to comply with them.
       <br></br>
-      3.2. If you do not agree to these terms, you must not use our site.{' '}
+      3.2. If you do not agree to these terms, you must not use our site.{" "}
       <br></br>
       3.3. We recommend that you print a copy of these terms for future
       reference.<br></br> <br></br>
@@ -70,7 +70,7 @@ const TermsOfUse = () => {
       <br></br>
       7.3. You are also responsible for ensuring that all persons who access our
       site through your internet connection are aware of these terms of use and
-      other applicable terms and conditions, and that they comply with them.{' '}
+      other applicable terms and conditions, and that they comply with them.{" "}
       <br></br> <br></br>
       8. You must keep your account details safe
       <br></br>
@@ -86,7 +86,7 @@ const TermsOfUse = () => {
       <br></br>
       8.3. If you know or suspect that anyone other than you knows your user
       identification code or password, you must promptly notify us at
-      help@motickets.co.uk.
+      help@motickets.ng
       <br></br> <br />
       9. How you may use material on our site
       <br></br>
@@ -148,7 +148,7 @@ const TermsOfUse = () => {
       or values.
       <br></br>
       12.2. If you wish to complain about information and materials uploaded by
-      other users please contact us at help@motickets.co.uk.
+      other users please contact us at help@motickets.ng
       <br></br>
       <br></br>
       13. Our responsibility for loss or damage suffered by you
@@ -304,7 +304,7 @@ const TermsOfUse = () => {
       [Acceptable Use Policy Domain Address].
       <br></br>
       17.7. If you wish to link to or make any use of content on our site other
-      than that set out above, please contact help@motickets.co.uk.
+      than that set out above, please contact help@motickets.ng.
       <br></br>
       <br></br>
       18. Which country's laws apply to any disputes?
