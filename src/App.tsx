@@ -31,6 +31,7 @@ import ResetPassword from "./pages/auth/User/UserProfile/ResetPassword";
 import FinancialTable from "./pages/dashboard/Financial";
 import Blog from "./pages/blog";
 import BlogDetailsPage from "./components/BlogDetailsPage";
+import { HelmetProvider } from "react-helmet-async";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -39,7 +40,7 @@ const queryClient = new QueryClient();
 
 function App() {
   return (
-    <>
+    <HelmetProvider>
       <QueryClientProvider client={queryClient}>
         <ToastContainer />
         <BrowserRouter>
@@ -124,7 +125,7 @@ function App() {
           <Toaster />
         </BrowserRouter>
       </QueryClientProvider>
-    </>
+    </HelmetProvider>
   );
 }
 
