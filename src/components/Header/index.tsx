@@ -154,9 +154,9 @@ const Header: React.FC = () => {
           >
             Create Event
           </li>
-          <li className="menuItem" onClick={() => navigationHandler("/blog")}>
+          {/* <li className="menuItem" onClick={() => navigationHandler("/blog")}>
             Blog
-          </li>
+          </li> */}
         </ul>
 
         {/* DropdownCountry Component */}
