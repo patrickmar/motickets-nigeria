@@ -58,7 +58,8 @@ function App() {
               <Route path="/corporate-philosophy" element={<Philosophy />} />
               <Route path="/success" element={<Success />} />
               <Route path="/blog" element={<Blog />} />
-              <Route path="/blog-details/:id" element={<BlogDetailsPage />} />
+              <Route path="/blog/:slug" element={<BlogDetailsPage />} />
+
               <Route
                 path="/create-event"
                 element={

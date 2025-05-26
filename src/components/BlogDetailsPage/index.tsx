@@ -5,11 +5,11 @@ import { getSinglePost } from "../../services/index/post";
 import { Helmet } from "react-helmet-async";
 
 const BlogDetailsPage = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
 
   const { data, isLoading, isError } = useQuery({
-    queryFn: () => getSinglePost(id),
-    queryKey: ["details", id],
+    queryFn: () => getSinglePost(slug),
+    queryKey: ["details", slug],
     onSuccess: (data) => {
       console.log(data);
     },
@@ -65,7 +65,7 @@ const BlogDetailsPage = () => {
         />
         <meta
           property="og:url"
-          content={`https://www.motickets.ng/blog-details/${data.slug || id}`}
+          content={`https://www.motickets.ng/blog-details/${data.slug || slug}`}
         />
 
         {/* Twitter */}
@@ -89,7 +89,7 @@ const BlogDetailsPage = () => {
 
         <link
           rel="canonical"
-          href={`https://www.motickets.ng/blog-details/${data.slug || id}`}
+          href={`https://www.motickets.ng/blog-details/${data.slug || slug}`}
         />
       </Helmet>
 

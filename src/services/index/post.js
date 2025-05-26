@@ -14,11 +14,12 @@ export const getAllPosts = async () => {
   }
 };
 
-export const getSinglePost = async (id) => {
-  console.log(id);
+// Updated to use slug instead of id
+export const getSinglePost = async (slug) => {
+  console.log(slug);
   try {
     const { data } = await axios.get(
-      `https://moticket-ng-blog.onrender.com/api/v1/post/${id}`
+      `https://moticket-ng-blog.onrender.com/api/v1/post/${slug}`
     );
     console.log(data);
     return data;
