@@ -6,7 +6,7 @@ import { QuillFormats } from "../../constant";
 import { toast } from "react-toastify";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { customAlphabet } from "nanoid";
 import { useGetHostEventByIdQuery } from "../../redux/api/eventApi";
 import { setUpdateStatus } from "../../features/eventSlice";
@@ -14,6 +14,10 @@ import { Link } from "react-router-dom";
 
 interface User {
   id: string;
+}
+
+interface EventResponse {
+  data: Event[];
 }
 
 interface TicketCategory {
@@ -75,6 +79,25 @@ interface EventData {
   end: StartInfo[];
 }
 
+interface Event {
+  sn: string;
+  hostid: string;
+  title: string;
+  currency: string;
+  venue: string;
+  paystack_bearer: string;
+  event_cat: string;
+  des: string;
+  ticketCategories: TicketCategory[];
+  imgs: { img: string }[];
+  start: { date: string; time: string }[];
+  end: { date: string; time: string }[];
+  from_date: string;
+  from_time: string;
+  to_date: string;
+  to_time: string;
+}
+
 const EditEventForm: React.FC = () => {
   const { sn } = useParams<{ sn: string }>();
   const formats = QuillFormats;
@@ -85,6 +108,7 @@ const EditEventForm: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
+  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const user = useSelector(
@@ -114,7 +138,7 @@ const EditEventForm: React.FC = () => {
         numOfPeople: "10",
       },
     ],
-    chargesBearer: "",
+    chargesBearer: "client",
     currency: "",
     eventType: "",
     banner: [],
@@ -147,8 +171,8 @@ const EditEventForm: React.FC = () => {
           ticketCategories: event.ticketCategories.map((category) => ({
             name: category.name,
             price: category.price,
-            discountPrice: category.discount_price,
-            walletDiscount: category.wallet_discount,
+            discountPrice: "0",
+            walletDiscount: "0",
             qty: category.quantity,
             numOfPeople: category.noofpeople,
           })),
@@ -199,9 +223,9 @@ const EditEventForm: React.FC = () => {
   const handleAddCategory = () => {
     const newCategory: Category = {
       name: "",
-      price: eventData.currency ? currencySymbolMap[eventData.currency] : "",
-      discountPrice: "",
-      walletDiscount: "",
+      price: "",
+      discountPrice: "0",
+      walletDiscount: "0",
       qty: "",
       numOfPeople: "",
     };
@@ -362,6 +386,7 @@ const EditEventForm: React.FC = () => {
           lastModified: selectedImages[i].lastModified,
         });
         formData.append("banner[]", banner);
+        console.log(`Renamed Image: ${banner.name}`);
       }
 
       const logObject: { [key: string]: any } = {};
@@ -375,7 +400,7 @@ const EditEventForm: React.FC = () => {
           logObject[key] = value;
         }
       });
-      // console.log(logObject);
+      console.log(logObject);
 
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/update/eventticket/${sn}`,
@@ -388,9 +413,9 @@ const EditEventForm: React.FC = () => {
       if (!response.ok) {
         throw new Error("Fail to update event");
       }
-      // console.log(response);
+      console.log(response);
       const data = await response.json();
-      // console.log(data);
+      console.log(data);
 
       if (data.error === false) {
         toast.success(data.message);
@@ -499,7 +524,7 @@ const EditEventForm: React.FC = () => {
                     <div key={index} className="mr-2 mb-2 relative">
                       <img
                         src={image}
-                        alt={`eventful-${index + 1}`}
+                        alt={`Event Image ${index + 1}`}
                         className="h-24 w-24 object-cover border rounded-md"
                       />
                       <button
@@ -528,7 +553,7 @@ const EditEventForm: React.FC = () => {
                     <div key={index} className="mr-2 mb-2 relative">
                       <img
                         src={URL.createObjectURL(image)}
-                        alt={`evently-${index + 1}`}
+                        alt={`Event Image ${index + 1}`}
                         className="h-24 w-24 object-cover border rounded-md"
                       />
                       <button
@@ -720,7 +745,7 @@ const EditEventForm: React.FC = () => {
           {step === 4 && (
             <>
               <div className="flex space-x-4 mb-4">
-                <div className="flex-1">
+                <div className="flex-1" style={{ display: "none" }}>
                   <label
                     htmlFor="bearer"
                     className="block mb-2 text-sm font-medium text-white"
@@ -779,12 +804,14 @@ const EditEventForm: React.FC = () => {
                       <th className="px-4 py-2">
                         Price ({currencySymbolMap[eventData.currency]})
                       </th>
-                      <th className="px-4 py-2">
+                      <th className="px-4 py-2" style={{ display: "none" }}>
                         Discount Price(
                         {currencySymbolMap[eventData.currency]})
                       </th>
 
-                      <th className="px-4 py-2">Wallet Discount</th>
+                      <th className="px-4 py-2" style={{ display: "none" }}>
+                        Wallet Discount
+                      </th>
                       <th className="px-4 py-2">Qty</th>
                       <th className="px-4 py-2">Number Of People</th>
                       <th className="px-4 py-2">Action</th>
@@ -821,7 +848,10 @@ const EditEventForm: React.FC = () => {
                             }
                           />
                         </td>
-                        <td className="border px-4 py-2">
+                        <td
+                          className="border px-4 py-2"
+                          style={{ display: "none" }}
+                        >
                           <input
                             type="text"
                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
@@ -835,7 +865,10 @@ const EditEventForm: React.FC = () => {
                             }
                           />
                         </td>
-                        <td className="border px-4 py-2">
+                        <td
+                          className="border px-4 py-2"
+                          style={{ display: "none" }}
+                        >
                           <input
                             type="text"
                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
@@ -920,8 +953,35 @@ const EditEventForm: React.FC = () => {
               <button
                 type="submit"
                 className="text-white bg-[#25aae1] px-6 py-2 rounded-md disabled:opacity-70 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
               >
-                {isSubmitting ? "Submitting..." : "Submit"}
+                {isSubmitting ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    updating...
+                  </>
+                ) : (
+                  "Update"
+                )}
               </button>
             )}
           </div>

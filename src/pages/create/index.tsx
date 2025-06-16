@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "../../assets/css/quill.css";
@@ -127,13 +127,13 @@ const CreateEventForm: React.FC = () => {
       {
         name: "Regular",
         price: "200",
-        discountPrice: "5",
+        discountPrice: "0",
         walletDiscount: "0",
         qty: "10",
         numOfPeople: "1",
       },
     ],
-    chargesBearer: "",
+    chargesBearer: "client",
     currency: "",
     eventType: "",
     banner: [],
@@ -181,11 +181,11 @@ const CreateEventForm: React.FC = () => {
   const handleAddCategory = () => {
     const newCategory: Category = {
       name: "",
-      price: eventData.currency ? currencySymbolMap[eventData.currency] : "",
-      discountPrice: "",
-      walletDiscount: "",
+      price: "",
+      discountPrice: "0",
+      walletDiscount: "0",
       qty: "",
-      numOfPeople: "1",
+      numOfPeople: "",
     };
 
     setEventData((prevData) => ({
@@ -396,7 +396,7 @@ const CreateEventForm: React.FC = () => {
           lastModified: selectedImages[i].lastModified,
         });
         formData.append("banner[]", banner);
-        // console.log(`Renamed Image: ${banner.name}`);
+        console.log(`Renamed Image: ${banner.name}`);
       }
 
       // Create an object to log
@@ -411,7 +411,7 @@ const CreateEventForm: React.FC = () => {
           logObject[key] = value;
         }
       });
-      // console.log(logObject);
+      console.log(logObject);
 
       const response = await fetch(BaseUrl, {
         method: "POST",
@@ -425,12 +425,7 @@ const CreateEventForm: React.FC = () => {
       const data = await response.json();
       if (data.error === false) {
         toast.success(data.message);
-        navigate("/dashboard", {
-          state: {
-            selectedMenu: "Event",
-            selectedEventOption: "MyEvent",
-          },
-        });
+        navigate("/dashboard");
       } else {
         throw new Error(data.message || "Unknown error");
       }
@@ -464,16 +459,24 @@ const CreateEventForm: React.FC = () => {
     return `${paddedHours}:${paddedMinutes}:00`;
   };
 
+  console.log(formatTime);
+
   const handleInformationClick = () => {
     setShowInformation((prevShowInformation) => !prevShowInformation);
   };
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.id) {
+      toast("hostId not found, kindly login again");
+      navigate("/login");
+    }
+  }, [isAuthenticated, user, navigate]);
 
   return (
     <div className="flex items-center justify-center">
-      <div className="bg-gray-100 p-8 rounded shadow-lg w-4/5 lg:w-3/5 mt-24">
-        <h2 className="text-2xl font-semibold mb-4 text-[#25aae1]">
-          Create Event
-        </h2>
+      <div className="bg-gray-300/10 p-8 rounded shadow-lg w-4/5 lg:w-3/5 mt-24">
+        <h2 className="text-2xl font-semibold mb-4 text-white">Create Event</h2>
         <form onSubmit={handleSubmit}>
           {step === 1 && (
             <>
@@ -485,7 +488,7 @@ const CreateEventForm: React.FC = () => {
                   type="text"
                   id="eventTitle"
                   name="eventTitle"
-                  className="w-full px-4 py-2 bg-white border rounded-md focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
                   value={eventData.eventTitle}
                   onChange={handleChange}
                   required
@@ -500,11 +503,11 @@ const CreateEventForm: React.FC = () => {
                   type="text"
                   id="venue"
                   name="venue"
-                  className="w-full px-4 py-2 bg-white border rounded-md focus:outline-none focus:border-blue-500"
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
                   value={eventData.venue}
                   onChange={handleChange}
                   required
-                  placeholder="Lagos, Nigeria"
+                  placeholder="London, England"
                 />
               </div>
               <div className="mb-4">
@@ -524,7 +527,7 @@ const CreateEventForm: React.FC = () => {
                       id="banner"
                       name="banner"
                       accept="image/*"
-                      className="hidden bg-white"
+                      className="hidden"
                       onChange={(e) => handleNewImageChange(e.target.files)}
                       ref={fileInputRef}
                       multiple
@@ -578,7 +581,7 @@ const CreateEventForm: React.FC = () => {
               {/* Add information tooltip or modal */}
               {showInformation && (
                 <div className="bg-white p-4 border rounded-md">
-                  <p className=" italic text-gray-600">
+                  <p className=" italic text-blue-400">
                     Event graphics preferably include dimensions (220 by 330 px)
                     and (500 by 550 px) but any size provided may be resized to
                     fit. Supported formats are jpg, jpeg, png, gif.
@@ -681,7 +684,7 @@ const CreateEventForm: React.FC = () => {
               <div className="mb-4" data-name="description">
                 <label
                   htmlFor="description"
-                  className="block mb-2 text-sm font-medium text-[#25aae1] "
+                  className="block mb-2 text-sm font-medium text-white "
                 >
                   Description
                 </label>
@@ -689,7 +692,7 @@ const CreateEventForm: React.FC = () => {
                   formats={formats}
                   value={eventData.description}
                   onChange={handleDescriptionChange}
-                  className="add-new-post__editor mb-1 text-gray-900 bg-white"
+                  className="add-new-post__editor mb-1 text-white"
                   theme="snow"
                 />
                 <p className="text-xs text-gray-400">
@@ -739,10 +742,10 @@ const CreateEventForm: React.FC = () => {
           {step === 4 && (
             <>
               <div className="flex space-x-4 mb-4">
-                <div className="flex-1">
+                <div className="flex-1" style={{ display: "none" }}>
                   <label
                     htmlFor="bearer"
-                    className="block mb-2 text-sm font-medium text-[#25aae1]"
+                    className="block mb-2 text-sm font-medium text-gray-900"
                   >
                     Charge Bearer
                   </label>
@@ -767,7 +770,7 @@ const CreateEventForm: React.FC = () => {
                 <div className="flex-1">
                   <label
                     htmlFor="currency"
-                    className="block mb-2 text-sm font-medium text-[#25aae1]"
+                    className="block mb-2 text-sm font-medium text-gray-900"
                   >
                     Currency
                   </label>
@@ -787,7 +790,7 @@ const CreateEventForm: React.FC = () => {
                 </div>
               </div>
 
-              <h3 className="text-xl font-semibold mb-4 text-[#25aae1]">
+              <h3 className="text-xl font-semibold mb-4 text-white">
                 Ticket Categories
               </h3>
               <div className="overflow-x-auto">
@@ -798,14 +801,14 @@ const CreateEventForm: React.FC = () => {
                       <th className="px-4 py-2">
                         Price ({currencySymbolMap[eventData.currency]})
                       </th>
-                      <th className="px-4 py-2">
+                      {/* <th className="px-4 py-2">
                         Discount Price(
                         {currencySymbolMap[eventData.currency]})
-                      </th>
+                      </th> */}
 
-                      <th className="px-4 py-2">Wallet Discount</th>
+                      {/* <th className="px-4 py-2">Wallet Discount</th> */}
                       <th className="px-4 py-2">Qty</th>
-                      <th className="px-4 py-2">Number Of People</th>
+                      <th className="px-4 py-2">Guest Per Unit</th>
                       <th className="px-4 py-2">Action</th>
                     </tr>
                   </thead>
@@ -840,7 +843,7 @@ const CreateEventForm: React.FC = () => {
                             }
                           />
                         </td>
-                        <td className="border px-4 py-2">
+                        {/* <td className="border px-4 py-2">
                           <input
                             type="text"
                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
@@ -853,8 +856,8 @@ const CreateEventForm: React.FC = () => {
                               )
                             }
                           />
-                        </td>
-                        <td className="border px-4 py-2">
+                        </td> */}
+                        {/* <td className="border px-4 py-2">
                           <input
                             type="text"
                             className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
@@ -867,7 +870,7 @@ const CreateEventForm: React.FC = () => {
                               )
                             }
                           />
-                        </td>
+                        </td> */}
                         <td className="border px-4 py-2">
                           <input
                             type="text"
