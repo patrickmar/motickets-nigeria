@@ -16,7 +16,7 @@ import { validationSchema } from "./validation";
 import { NumericFormat } from "react-number-format";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrency, getCurrencyName } from "../../utils/functions";
-import PaystackPop from '@paystack/inline-js'
+import PaystackPop from "@paystack/inline-js";
 import usePost from "../../hooks/usePost";
 
 import { toast } from "react-toastify";
@@ -51,7 +51,7 @@ const CheckoutForm = (props: Props) => {
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
   const baseUrl = process.env.REACT_APP_BASEURL;
   const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
- // console.log(paystackKey);
+  // console.log(paystackKey);
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -81,7 +81,6 @@ const CheckoutForm = (props: Props) => {
   const currencyName = data && getCurrencyName(data);
   const query = new URLSearchParams(window.location.search);
   const totalAmountInKobo = Math.round(Number(totalAmount) * 100);
-  
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevState) => ({
@@ -131,17 +130,14 @@ const CheckoutForm = (props: Props) => {
       amount: totalAmountInKobo, // Corrected: Now in kobo
       currency: currencyName || "NGN",
       metadata: { firstName, lastName, phoneNo, userConsent, tickets },
-      
     };
 
-   // console.log(baseUrl);
-   // console.log("Payload Sent to Paystack:", payload); // Debugging log
+    // console.log(baseUrl);
+    // console.log("Payload Sent to Paystack:", payload); // Debugging log
     //console.log("Total Amount (NGN):", totalAmount);
-   // console.log("Total formData):", formData);
+    // console.log("Total formData):", formData);
 
     try {
-      
-
       const apiResponse = await axios.post(
         // "https://api.paystack.co/transaction/initialize",
         `${baseUrl}/paystack/initialise_transaction`,
@@ -157,112 +153,111 @@ const CheckoutForm = (props: Props) => {
       //console.log("Paystack Response:", apiResponse);
 
       if (apiResponse.data.status == true) {
-        const popup = new PaystackPop()
-const res= popup.resumeTransaction(apiResponse.data.data.access_code,
+        const popup = new PaystackPop();
+        const res = popup.resumeTransaction(
+          apiResponse.data.data.access_code,
 
-  {
-       
-      
-      onSuccess: (transaction) => {
-       
-        const newJson={
-          vat: vat,
-                 totalbookingFee:totalbookingFee,
-                 subTotal:subTotal,
-                 totalAmount: totalAmount 
-               
-               }
-          const mergedData={...data, ...formData,...newJson};
-          
-          //console.log("userdata ", mergedData);
-    const verifyPayment = async () => {
-      try {
-        await axios.get(
-          `${baseUrl}/paystack/verify_transaction/${transaction.reference}`,
-          
-        ).then(res => {
-          let status= res.data.paystackresp.status;
-         // console.log('tick',tickets);
-          if ( status === true) {
-            //setPayres(res.data);
+          {
+            onSuccess: (transaction) => {
+              const newJson = {
+                vat: vat,
+                totalbookingFee: totalbookingFee,
+                subTotal: subTotal,
+                totalAmount: totalAmount,
+              };
+              const mergedData = { ...data, ...formData, ...newJson };
 
-         try{
-            toast.success("Payment successful!");
-           
-              axios.post(`${baseUrl}/dispense/paystack_ticket`, {
-              userdata: mergedData,
-              
-              myCart: tickets,
-              paystackData: res.data.paystackresp.data,
-            }).then(resDispense => {
-             // console.log("Ticket Response:", resDispense);
-              if (resDispense.data.error === false) {
-                      
-                navigate("/success", {
-                  state: { tickets: tickets, data, totalAmount, subTotal, totalbookingFee, vat, reference:transaction.reference, formData, payValidated:!resDispense.data.error },
-                });
-                      
-                      
-                    } else {
-                      //console.log("Ticket dispensing failed. Please contact support.");
-                    }
-            
-            });
-      
-          
-          
-            // if (resDispense.data.error === false) {
-            //   setValidatePay(true);
-            // } else {
-            //   console.log("Ticket dispensing failed. Please contact support.");
-            // }
-          } catch (error) {
-            console.error("Ticket processing error:", error);
+              //console.log("userdata ", mergedData);
+              const verifyPayment = async () => {
+                try {
+                  await axios
+                    .get(
+                      `${baseUrl}/paystack/verify_transaction/${transaction.reference}`
+                    )
+                    .then((res) => {
+                      let status = res.data.paystackresp.status;
+                      // console.log('tick',tickets);
+                      if (status === true) {
+                        //setPayres(res.data);
+
+                        try {
+                          toast.success("Payment successful!");
+
+                          axios
+                            .post(`${baseUrl}/dispense/paystack_ticket`, {
+                              userdata: mergedData,
+
+                              myCart: tickets,
+                              paystackData: res.data.paystackresp.data,
+                            })
+                            .then((resDispense) => {
+                              // console.log("Ticket Response:", resDispense);
+                              if (resDispense.data.error === false) {
+                                navigate("/success", {
+                                  state: {
+                                    tickets: tickets,
+                                    data,
+                                    totalAmount,
+                                    subTotal,
+                                    totalbookingFee,
+                                    vat,
+                                    reference: transaction.reference,
+                                    formData,
+                                    payValidated: !resDispense.data.error,
+                                  },
+                                });
+                              } else {
+                                //console.log("Ticket dispensing failed. Please contact support.");
+                              }
+                            });
+
+                          // if (resDispense.data.error === false) {
+                          //   setValidatePay(true);
+                          // } else {
+                          //   console.log("Ticket dispensing failed. Please contact support.");
+                          // }
+                        } catch (error) {
+                          console.error("Ticket processing error:", error);
+                        }
+
+                        // dispenseTickets(); // Call ticket dispensing function
+
+                        // navigate("/success");
+                      } else {
+                        toast.error("Payment verification failed.");
+                        // navigate("/checkout");
+                      }
+                    })
+                    .catch((error) => {
+                      //console.log(error);
+                    });
+                  //console.log(reference);
+                } catch (error) {
+                  console.error("Error verifying payment:", error);
+                  toast.error("An error occurred during payment verification.");
+                  // navigate("/checkout");
+                }
+              };
+
+              verifyPayment();
+            },
+            onLoad: (response) => {
+              //console.log("onLoad: ", response);
+            },
+            onCancel: () => {
+              //console.log("onCancel");
+            },
+            onError: (error) => {
+              // console.log("Error: ", error.message);
+            },
           }
-        
-          // dispenseTickets(); // Call ticket dispensing function
-  
-           // navigate("/success");
-          } else {
-             toast.error("Payment verification failed.");
-            // navigate("/checkout");
-          }
-          }).catch(error => {
-         //console.log(error);
-          });
-        //console.log(reference);
-        
-       
-       
-      } catch (error) {
-        console.error("Error verifying payment:", error);
-        toast.error("An error occurred during payment verification.");
-       // navigate("/checkout");
-      } 
-    };
+        );
 
-    
-    verifyPayment();
-       
-      
-      },
-      onLoad: (response) => {
-        //console.log("onLoad: ", response);
-      },
-      onCancel: () => {
-        //console.log("onCancel");
-      },
-      onError: (error) => {
-       // console.log("Error: ", error.message);
-      }
-    }
-)
-
-       //console.log(res);
-      // console.log(res[0].response);
-      //  if(res.status=="success"){
-      //   window.location.href = res.response.redirecturl;
-      //  }//window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
+        //console.log(res);
+        // console.log(res[0].response);
+        //  if(res.status=="success"){
+        //   window.location.href = res.response.redirecturl;
+        //  }//window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
       } else {
         throw new Error("Failed to generate Paystack authorization URL");
       }
@@ -448,7 +443,7 @@ const res= popup.resumeTransaction(apiResponse.data.data.access_code,
                   </p>
                 </div>
               </div>
-
+              {/* 
               <div className="flex mb-6">
                 <div className="flex items-center h-5">
                   <input
@@ -470,7 +465,7 @@ const res= popup.resumeTransaction(apiResponse.data.data.access_code,
                     Create account with above information.
                   </label>
                 </div>
-              </div>
+              </div> */}
 
               <button
                 type="submit"
