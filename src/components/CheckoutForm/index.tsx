@@ -16,7 +16,7 @@ import { validationSchema } from "./validation";
 import { NumericFormat } from "react-number-format";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrency, getCurrencyName } from "../../utils/functions";
-import PaystackPop from "@paystack/inline-js";
+
 import usePost from "../../hooks/usePost";
 
 import { toast } from "react-toastify";
@@ -50,8 +50,7 @@ const CheckoutForm = (props: Props) => {
   const defaultCountryCode = process.env.REACT_APP_COUNTRYCODE;
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
   const baseUrl = process.env.REACT_APP_BASEURL;
-  const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
-  // console.log(paystackKey);
+  const STRIPE_KEY = process.env.REACT_APP_STRIPE_KEY;
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -61,7 +60,7 @@ const CheckoutForm = (props: Props) => {
     terms: false,
   };
 
-  // console.log(tickets);
+  console.log(tickets);
   const [formData, setFormData] = useState<ICheckoutForm>(initialValues);
   const [errors, setErrors] = useState<ICheckoutForm>(initialValues);
   const [touched, setTouched] = useState<IBoolean>({
@@ -75,12 +74,78 @@ const CheckoutForm = (props: Props) => {
   const [discount, setDiscount] = useState("");
   const [ticketDatas, setTicketDatas] = useState("");
   const { firstName, lastName, email, phoneNo, userConsent, terms } = formData;
+  const [stripeToken, setStripeToken] = useState(null);
   const navigate = useNavigate();
 
+  const onToken = (token: any) => {
+    console.log(token);
+    setStripeToken(token);
+  };
   const currency = data && getCurrency(data);
   const currencyName = data && getCurrencyName(data);
   const query = new URLSearchParams(window.location.search);
-  const totalAmountInKobo = Math.round(Number(totalAmount) * 100);
+
+  useEffect(() => {
+    // Check to see if this is a redirect back from Checkout
+    const customId = "toastid";
+
+    if (query.get("success")) {
+      toast.success("Order placed! You will receive an email confirmation.", {
+        toastId: customId,
+      });
+
+      console.log(tickets);
+
+      console.log(ticketDatas);
+      // navigate("/success", {
+      //   state: {
+
+      //     tickets: tickets,
+      //     ticketData: ticketDatas,
+      //     data: { data, totalAmount, subTotal, vat  } },
+      //   replace: true
+      //   })
+    }
+
+    if (query.get("canceled")) {
+      toast.error(
+        "Order canceled -- continue to shop around and checkout when you're ready."
+      );
+    }
+  }, [query]);
+
+  // useEffect(() => {
+  //   const MakeRequest = async ()=>{
+
+  //          try {
+
+  //       const res= await axios.post(`${baseUrl}/stripe/payment`, {
+  //            tokenId : stripeToken.id,
+  //            amount: totalAmount*100,
+  //            currency: currencycode
+  //       });
+
+  //       console.log(tickets);
+
+  //       console.log(ticketDatas);
+  //       // navigate("/success", {
+  //       // state: {
+  //       //   stripeData: res.data,
+  //       //   tickets: tickets,
+  //       //   ticketData: ticketDatas,
+  //       //   data: { data, totalAmount, subTotal, vat  } },
+  //       // replace: true
+  //       // })
+
+  //      console.log(stripeData);
+  //   } catch (error) {
+  //       console.log(error);
+
+  //   }
+  //   };
+
+  //   stripeToken && MakeRequest();
+  // }, [stripeToken, navigate])
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevState) => ({
@@ -115,158 +180,32 @@ const CheckoutForm = (props: Props) => {
   const onSubmit: FormEventHandler<HTMLFormElement> = async (
     e: FormEvent<HTMLFormElement>
   ) => {
+    console.log("got");
     e.preventDefault();
-
     if (!terms) {
       toast.error("Please accept the terms and conditions");
-      return;
-    }
+    } else {
+      const ticketData = {
+        firstName,
+        lastName,
+        email,
+        phoneNo,
+        userConsent,
+        terms,
+        discount,
+        currencyName,
+        vat,
+        tickets,
+      };
 
-    //console.log("tick",tickets);
-    // Define the payload
-    const payload = {
-      key: paystackKey,
-      email,
-      amount: totalAmountInKobo, // Corrected: Now in kobo
-      currency: currencyName || "NGN",
-      metadata: { firstName, lastName, phoneNo, userConsent, tickets },
-    };
+      setTicketDatas(ticketData);
+      console.log(ticketData);
+      const res = await axios.post(`${baseUrl}/checkout/stripe_session`, {
+        ticketData: ticketData,
+      });
 
-    // console.log(baseUrl);
-    // console.log("Payload Sent to Paystack:", payload); // Debugging log
-    //console.log("Total Amount (NGN):", totalAmount);
-    // console.log("Total formData):", formData);
-
-    try {
-      const apiResponse = await axios.post(
-        // "https://api.paystack.co/transaction/initialize",
-        `${baseUrl}/paystack/initialise_transaction`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${paystackKey}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      //console.log("Paystack Response:", apiResponse);
-
-      if (apiResponse.data.status == true) {
-        const popup = new PaystackPop();
-        const res = popup.resumeTransaction(
-          apiResponse.data.data.access_code,
-
-          {
-            onSuccess: (transaction) => {
-              const newJson = {
-                vat: vat,
-                totalbookingFee: totalbookingFee,
-                subTotal: subTotal,
-                totalAmount: totalAmount,
-              };
-              const mergedData = { ...data, ...formData, ...newJson };
-
-              //console.log("userdata ", mergedData);
-              const verifyPayment = async () => {
-                try {
-                  await axios
-                    .get(
-                      `${baseUrl}/paystack/verify_transaction/${transaction.reference}`
-                    )
-                    .then((res) => {
-                      let status = res.data.paystackresp.status;
-                      // console.log('tick',tickets);
-                      if (status === true) {
-                        //setPayres(res.data);
-
-                        try {
-                          toast.success("Payment successful!");
-
-                          axios
-                            .post(`${baseUrl}/dispense/paystack_ticket`, {
-                              userdata: mergedData,
-
-                              myCart: tickets,
-                              paystackData: res.data.paystackresp.data,
-                            })
-                            .then((resDispense) => {
-                              // console.log("Ticket Response:", resDispense);
-                              if (resDispense.data.error === false) {
-                                navigate("/success", {
-                                  state: {
-                                    tickets: tickets,
-                                    data,
-                                    totalAmount,
-                                    subTotal,
-                                    totalbookingFee,
-                                    vat,
-                                    reference: transaction.reference,
-                                    formData,
-                                    payValidated: !resDispense.data.error,
-                                  },
-                                });
-                              } else {
-                                //console.log("Ticket dispensing failed. Please contact support.");
-                              }
-                            });
-
-                          // if (resDispense.data.error === false) {
-                          //   setValidatePay(true);
-                          // } else {
-                          //   console.log("Ticket dispensing failed. Please contact support.");
-                          // }
-                        } catch (error) {
-                          console.error("Ticket processing error:", error);
-                        }
-
-                        // dispenseTickets(); // Call ticket dispensing function
-
-                        // navigate("/success");
-                      } else {
-                        toast.error("Payment verification failed.");
-                        // navigate("/checkout");
-                      }
-                    })
-                    .catch((error) => {
-                      //console.log(error);
-                    });
-                  //console.log(reference);
-                } catch (error) {
-                  console.error("Error verifying payment:", error);
-                  toast.error("An error occurred during payment verification.");
-                  // navigate("/checkout");
-                }
-              };
-
-              verifyPayment();
-            },
-            onLoad: (response) => {
-              //console.log("onLoad: ", response);
-            },
-            onCancel: () => {
-              //console.log("onCancel");
-            },
-            onError: (error) => {
-              // console.log("Error: ", error.message);
-            },
-          }
-        );
-
-        //console.log(res);
-        // console.log(res[0].response);
-        //  if(res.status=="success"){
-        //   window.location.href = res.response.redirecturl;
-        //  }//window.location.href = response.data.data.authorization_url; // Redirect to Paystack checkout
-      } else {
-        throw new Error("Failed to generate Paystack authorization URL");
-      }
-    } catch (error) {
-      console.error(
-        "Payment initiation failed:",
-        error.response?.data || error
-      );
-      toast.error("Something went wrong. Please try again.");
+      console.log(res.data);
+      window.location.href = res.data.url;
     }
   };
 
@@ -293,39 +232,17 @@ const CheckoutForm = (props: Props) => {
 
   const onDiscountClick = () => {};
 
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-
-    if (query.get("success")) {
-      toast.success("Order placed! You will receive an email confirmation.");
-      navigate("/success"); // Navigate to success page
-    }
-
-    if (query.get("canceled")) {
-      toast.error("Order canceled. Please try again.");
-    }
-  }, [query, navigate]);
-
-  // useEffect(() => {
-  //   const query = new URLSearchParams(window.location.search);
-  //   const reference = query.get("reference");
-
-  //   if (reference) {
-  //     navigate("/success"); // Redirect to the success page
-  //   }
-  // }, [query, navigate]);
-
   return tickets ? (
-    <div className="mx-auto max-w-2xl bg-gray-200 px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
+    <div className="mx-auto max-w-2xl px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
       <div className="xl:gap-x-16 lg:gap-x-12 lg:grid-cols-2 grid max-w-[1200px]">
         <div>
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-800">
+            <h2 className="text-2xl font-bold text-white dark:text-white">
               Checkout
             </h2>
           </div>
           <div className="mt-10">
-            <h2 className="font-medium text-gray-800 text-lg">
+            <h2 className="font-medium text-white text-lg">
               Ticket information
             </h2>
 
@@ -334,7 +251,7 @@ const CheckoutForm = (props: Props) => {
                 <div>
                   <label
                     htmlFor="firstName"
-                    className="block mb-2 text-sm font-medium text-gray-800 dark:text-gray-800"
+                    className="block mb-2 text-sm font-medium text-white dark:text-white"
                   >
                     First Name
                   </label>
@@ -346,7 +263,7 @@ const CheckoutForm = (props: Props) => {
                     onChange={onChange}
                     onFocus={onFocus}
                     onBlur={onBlur}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-800 dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   />
                   <small className="form-error">
                     {touched?.firstName && errors?.firstName}
@@ -355,7 +272,7 @@ const CheckoutForm = (props: Props) => {
                 <div>
                   <label
                     htmlFor="lastName"
-                    className="block mb-2 text-sm font-medium text-gray-800 dark:text-gray-800"
+                    className="block mb-2 text-sm font-medium text-white dark:text-white"
                   >
                     Last Name
                   </label>
@@ -367,7 +284,7 @@ const CheckoutForm = (props: Props) => {
                     onChange={onChange}
                     onFocus={onFocus}
                     onBlur={onBlur}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-800 dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   />
                   <small className="form-error">
                     {touched?.lastName && errors?.lastName}
@@ -376,7 +293,7 @@ const CheckoutForm = (props: Props) => {
                 <div>
                   <label
                     htmlFor="email"
-                    className="block mb-2 text-sm font-medium text-gray-800 dark:text-gray-800"
+                    className="block mb-2 text-sm font-medium text-white dark:text-white"
                   >
                     Email Address
                   </label>
@@ -388,7 +305,7 @@ const CheckoutForm = (props: Props) => {
                     onChange={onChange}
                     onFocus={onFocus}
                     onBlur={onBlur}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-gray-800 dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   />
                   <small className="form-error">
                     {touched?.email && errors?.email}
@@ -397,7 +314,7 @@ const CheckoutForm = (props: Props) => {
                 <div>
                   <label
                     htmlFor="phoneNo"
-                    className="block mb-2 text-sm font-medium text-gray-800 dark:text-gray-800"
+                    className="block mb-2 text-sm font-medium text-white dark:text-white"
                   >
                     Phone Number
                   </label>
@@ -428,13 +345,13 @@ const CheckoutForm = (props: Props) => {
                     onFocus={onFocus}
                     onChange={onChange}
                     onBlur={onBlur}
-                    className="w-4 h-4 text-red-600 bg-white border-gray-900 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
                 <div className="ms-2 text-sm">
                   <label
                     htmlFor="terms"
-                    className="font-medium text-gray-800 dark:text-gray-300"
+                    className="font-medium text-blue-500  dark:text-blue-300 underline"
                   >
                     I accept the <Link to="/terms">terms and conditions</Link>
                   </label>
@@ -443,9 +360,12 @@ const CheckoutForm = (props: Props) => {
                   </p>
                 </div>
               </div>
-              {/* 
+
               <div className="flex mb-6">
-                <div className="flex items-center h-5">
+                <div
+                  className="flex items-center h-5"
+                  style={{ display: "none" }}
+                >
                   <input
                     id="userConsent"
                     name="userConsent"
@@ -454,19 +374,31 @@ const CheckoutForm = (props: Props) => {
                     onFocus={onFocus}
                     onChange={onChange}
                     onBlur={onBlur}
-                    className="w-4 h-4 text-red-600 bg-white border-[#25aae1] rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
                 </div>
-                <div className="ms-2 text-sm">
+                {/* <div className="ms-2 text-sm">
                   <label
                     htmlFor="userConsent"
-                    className="font-medium text-gray-800 dark:text-gray-300"
+                    className="font-medium text-white dark:text-gray-300"
                   >
                     Create account with above information.
                   </label>
-                </div>
-              </div> */}
-
+                </div> */}
+              </div>
+              {/* <StripeCheckout
+       name = "MoTickets "
+       image = "https://moloyal.com/images/moticketsicon.png"
+      //  billingAddress
+      //  shippingAddress
+      currency={currencycode}
+      email={email}
+      description={`Your total amount is ${currency}${totalAmount}`}
+       amount={totalAmount*100}
+       token={onToken}
+      stripeKey={STRIPE_KEY}
+      > 
+       */}
               <button
                 type="submit"
                 disabled={disabled}
@@ -482,14 +414,46 @@ const CheckoutForm = (props: Props) => {
                   prefix={`${currency}`}
                 />
               </button>
+              {/* </StripeCheckout> */}
             </form>
           </div>
         </div>
 
         <div className="mt-10 lg:mt-0">
-          <h2 className="text-lg font-medium text-gray-800">Ticket summary</h2>
+          <h2 className="text-lg font-medium text-white">Ticket summary</h2>
           <div className="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="px-4 py-6 sm:px-6"></div>
+            <div className="px-4 py-6 sm:px-6">
+              {/* <form>
+                <label
+                  htmlFor="discount"
+                  className="block font-medium text-sm text-black1"
+                >
+                  Discount code
+                </label>
+                <div className="mt-1 flex abj">
+                  <input
+                    type="text"
+                    id="discount"
+                    name="discount"
+                    value={discount}
+                    onChange={onDiscountChange}
+                    className="block w-full p-2.5 rounded-md border border-gray-300 shadow-sm sm:text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={onDiscountClick}
+                    disabled={discount?.length == 0}
+                    className={`${
+                      discount?.length == 0
+                        ? "bg-gray-200 text-gray-600 disabled"
+                        : "bg-red-600 text-white"
+                    } rounded-md px-4 text-sm font-medium bie bmz bne bnq bog bok`}
+                  >
+                    Apply
+                  </button>
+                </div>
+              </form> */}
+            </div>
 
             <dl className="aby border-t border-gray-200 px-4 py-6 sm:px-6">
               {tickets.map((item, i) => (
@@ -545,7 +509,7 @@ const CheckoutForm = (props: Props) => {
                 </dd>
               </div>
 
-              <div className="flex items-center justify-between border-t border-gray-500 pt-6">
+              <div className="flex items-center justify-between border-t border-gray-200 pt-6">
                 <dt className="text-lg text-customBlack font-bold">Total</dt>
                 <dd className="text-base font-bold text-customBlack">
                   <NumericFormat
@@ -557,7 +521,38 @@ const CheckoutForm = (props: Props) => {
                 </dd>
               </div>
             </dl>
-            <div className="border-t border-gray-200 px-4 py-6 sm:px-6"></div>
+            <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
+              {/* <StripeCheckout
+       name = "MoTickets"
+       image = "https://moloyal.com/images/moticketsicon.png"
+      //  billingAddress
+      //  shippingAddress
+      currency={currencycode}
+      email={email}
+       description={`Your total amount is ${currency}${totalAmount}`}
+       amount={totalAmount*100}
+       token={onToken}
+      stripeKey={STRIPE_KEY}
+      >  */}
+
+              {/* <button
+                type="submit"
+                disabled={disabled}
+                className={`${
+                  disabled ? "disabled" : ""
+                } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
+              >
+                Pay &nbsp;
+                <NumericFormat
+                  value={Number(totalAmount).toFixed(2)}
+                  displayType={"text"}
+                  thousandSeparator={true}
+                  prefix={`${currency}`}
+                />
+              </button> */}
+
+              {/* </StripeCheckout> */}
+            </div>
           </div>
         </div>
       </div>
