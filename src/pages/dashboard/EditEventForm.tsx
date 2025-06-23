@@ -400,7 +400,6 @@ const EditEventForm: React.FC = () => {
           logObject[key] = value;
         }
       });
-      console.log(logObject);
 
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/update/eventticket/${sn}`,
@@ -695,7 +694,7 @@ const EditEventForm: React.FC = () => {
                   formats={formats}
                   value={eventData.description}
                   onChange={handleDescriptionChange}
-                  className="add-new-post__editor mb-1 text-white"
+                  className="add-new-post__editor mb-1 text-black"
                   theme="snow"
                 />
                 <p className="text-xs text-gray-400">
