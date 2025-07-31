@@ -93,6 +93,7 @@ interface EventData {
   banner: File[];
   start: StartInfo[];
   end: StartInfo[];
+  youtubeUrl: string;
 }
 
 const BaseUrl = `${process.env.REACT_APP_BASEURL}/host_create/eventticket`;
@@ -149,7 +150,36 @@ const CreateEventForm: React.FC = () => {
         time: "",
       },
     ],
+    youtubeUrl: "",
   });
+
+  // Function to extract YouTube video ID from URL
+  const extractYouTubeId = (url: string): string | null => {
+    const regExp =
+      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return match && match[2].length === 11 ? match[2] : null;
+  };
+
+  // Function to validate YouTube URL
+  const isValidYouTubeUrl = (url: string): boolean => {
+    if (!url) return true; // This line makes it optional
+    const videoId = extractYouTubeId(url);
+    return videoId !== null;
+  };
+
+  // Handle YouTube URL change
+  const handleYoutubeUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    setEventData({ ...eventData, youtubeUrl: url });
+  };
+
+  // Function to generate YouTube embed URL
+  const getYouTubeEmbedUrl = (url: string): string => {
+    if (!url) return "";
+    const videoId = extractYouTubeId(url);
+    return videoId ? `https://www.youtube.com/embed/${videoId}` : "";
+  };
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -330,7 +360,6 @@ const CreateEventForm: React.FC = () => {
     setEventData({ ...eventData, eventType: value });
   };
   // Function to convert base64 string to Blob
-  // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string): Blob => {
     const byteString = atob(base64String.split(",")[1]);
     const arrayBuffer = new ArrayBuffer(byteString.length);
@@ -363,8 +392,30 @@ const CreateEventForm: React.FC = () => {
       const formData = new FormData();
       formData.append("hostid", hostid);
 
-      Object.entries(eventData).forEach(([key, value]) => {
-        if (key === "ticketCategories") {
+      // 1. VERIFICATION: Log initial YouTube URL value
+      console.log("[DEBUG] Initial youtubeurl value:", eventData.youtubeUrl);
+
+      // 2. EXPLICITLY add youtubeurl to formData (with verification)
+      if (eventData.youtubeUrl) {
+        formData.append("youtubeUrl", eventData.youtubeUrl);
+        console.log(
+          "[DEBUG] YouTube URL added to FormData:",
+          eventData.youtubeUrl
+        );
+      } else {
+        console.log("[DEBUG] No YouTube URL provided (optional field)");
+      }
+
+      // Add all other form data
+      const sanitizedEventData = {
+        ...eventData,
+        description: eventData.description
+          .replace(/'/g, "\\'") // Escape single quotes
+          .replace(/"/g, '\\"'), // Escape double quotes
+      };
+
+      Object.entries(sanitizedEventData).forEach(([key, value]) => {
+        if (key === "ticketCategories" && Array.isArray(value)) {
           value.forEach((category: any, index: number) => {
             Object.entries(category).forEach(([subKey, subValue]) => {
               formData.append(
@@ -384,58 +435,62 @@ const CreateEventForm: React.FC = () => {
         }
       });
 
-      const nanoid = customAlphabet("123456789", 11); // Define custom alphabet
-
+      // Process images
+      const nanoid = customAlphabet("123456789", 11);
       for (let i = 0; i < selectedImages.length; i++) {
         const base64 = await getBase64(selectedImages[i]);
         const blob = base64ToBlob(base64);
-        const elevenDigitName = nanoid(); // Generate an eleven-digit name
-        const fileExtension = selectedImages[i].name.split(".").pop(); // Get the file extension
+        const elevenDigitName = nanoid();
+        const fileExtension = selectedImages[i].name.split(".").pop();
         const banner = new File([blob], `${elevenDigitName}.${fileExtension}`, {
           type: selectedImages[i].type,
           lastModified: selectedImages[i].lastModified,
         });
         formData.append("banner[]", banner);
-        console.log(`Renamed Image: ${banner.name}`);
       }
 
-      // Create an object to log
-      const logObject: { [key: string]: any } = {};
+      // 3. FINAL VERIFICATION: Check if youtubeurl exists in FormData
+      console.log("[DEBUG] Final FormData contents:");
+      const formDataObj: Record<string, any> = {};
       formData.forEach((value, key) => {
         if (key === "banner[]") {
-          if (!logObject[key]) {
-            logObject[key] = [];
-          }
-          logObject[key].push(value);
+          if (!formDataObj[key]) formDataObj[key] = [];
+          formDataObj[key].push(value instanceof File ? value.name : value);
         } else {
-          logObject[key] = value;
+          formDataObj[key] = value;
         }
       });
-      console.log(logObject);
+      console.log(formDataObj);
 
+      // 4. VERIFY the actual request payload
+      console.log("[DEBUG] Sending request to:", BaseUrl);
       const response = await fetch(BaseUrl, {
         method: "POST",
         body: formData,
       });
 
+      // 5. Verify server response
+      console.log("[DEBUG] Response status:", response.status);
+      const responseData = await response.json();
+      console.log("[DEBUG] Server response:", responseData);
+
       if (!response.ok) {
-        throw new Error("Failed to create event");
+        throw new Error(responseData.message || "Failed to create event");
       }
 
-      const data = await response.json();
-      if (data.error === false) {
-        toast.success(data.message);
+      if (responseData.error === false) {
+        toast.success(responseData.message);
         navigate("/dashboard");
       } else {
-        throw new Error(data.message || "Unknown error");
+        throw new Error(responseData.message || "Unknown error");
       }
     } catch (error: any) {
+      console.error("[ERROR] Submission failed:", error);
       setSubmissionError(error.message || "Error creating event");
     } finally {
       setIsSubmitting(false);
     }
   };
-
   const getBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -495,6 +550,7 @@ const CreateEventForm: React.FC = () => {
                   placeholder="Da Ministry reunion"
                 />
               </div>
+
               <div className="mb-4">
                 <label htmlFor="venue" className="block text-gray-600 mb-2">
                   Event Venue
@@ -510,6 +566,50 @@ const CreateEventForm: React.FC = () => {
                   placeholder="London, England"
                 />
               </div>
+
+              {/* YouTube Video URL Field */}
+              <div className="mb-4">
+                <label
+                  htmlFor="youtubeUrl"
+                  className="block text-gray-600 mb-2"
+                >
+                  YouTube Video URL (Optional)
+                </label>
+                <input
+                  type="url"
+                  id="youtubeUrl" // This can stay as is for the ID
+                  name="youtubeUrl" // Make sure this matches your state property name
+                  className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
+                  value={eventData.youtubeUrl}
+                  onChange={handleYoutubeUrlChange}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                />
+                {eventData.youtubeUrl &&
+                  !isValidYouTubeUrl(eventData.youtubeUrl) && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Please enter a valid YouTube URL
+                    </p>
+                  )}
+                {eventData.youtubeUrl &&
+                  isValidYouTubeUrl(eventData.youtubeUrl) && (
+                    <div className="mt-4">
+                      <h4 className="text-gray-600 mb-2">Video Preview:</h4>
+                      <div className="aspect-w-16 aspect-h-9">
+                        <iframe
+                          width="100%"
+                          height="315"
+                          src={getYouTubeEmbedUrl(eventData.youtubeUrl)}
+                          title="YouTube video player"
+                          frameBorder="0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          className="rounded-md"
+                        ></iframe>
+                      </div>
+                    </div>
+                  )}
+              </div>
+
               <div className="mb-4">
                 <label htmlFor="banner" className="block text-gray-600">
                   Event Images (Up to 5)
@@ -533,7 +633,6 @@ const CreateEventForm: React.FC = () => {
                       multiple
                       required
                     />
-                    {/* Information icon */}
                     <div
                       className="cursor-pointer bg-gray-300 text-gray-600 rounded-full flex items-center justify-center w-6 h-6 text-sm lg:w-8 lg:h-8 lg:text-base"
                       onClick={handleInformationClick}
@@ -546,13 +645,11 @@ const CreateEventForm: React.FC = () => {
                 <div className="mt-2 flex flex-wrap">
                   {selectedImages.map((banner, index) => (
                     <div key={index} className="mr-2 mb-2 relative">
-                      {/* Image preview */}
                       <img
                         src={URL.createObjectURL(banner)}
-                        alt={`Event  ${index + 1}`}
+                        alt={`Event ${index + 1}`}
                         className="h-24 w-24 object-cover border rounded-md"
                       />
-                      {/* Delete button */}
                       <button
                         type="button"
                         className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
@@ -578,10 +675,9 @@ const CreateEventForm: React.FC = () => {
                 </div>
               </div>
 
-              {/* Add information tooltip or modal */}
               {showInformation && (
                 <div className="bg-white p-4 border rounded-md">
-                  <p className=" italic text-blue-400">
+                  <p className="italic text-blue-400">
                     Event graphics preferably include dimensions (220 by 330 px)
                     and (500 by 550 px) but any size provided may be resized to
                     fit. Supported formats are jpg, jpeg, png, gif.

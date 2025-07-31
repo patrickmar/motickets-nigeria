@@ -6,22 +6,16 @@ import "./styles.scss";
 import ContentWrapper from "../../components/ContentWrapper";
 import Img from "../../components/LazyLoadImage";
 import PosterFallback from "../../assets/images/no-poster.png";
-// import Tags from "../Tags";
+import Tags from "../Tags";
 import {
   convertHTMLCode,
   getCurrency,
   getCurrencyName,
-  // getTags,
+  getTags,
 } from "../../utils/functions";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-
-interface TicketQty {
-  qty: number;
-}
-interface BookingFee {
-  booking_fee: number;
-}
+import Modal from "../Modal";
 
 type Props = {
   id: any;
@@ -29,86 +23,62 @@ type Props = {
   loading: boolean;
   error?: any;
 };
-interface Ticket {
-  id: number;
-  name: string;
-  price: number;
-  qty: number;
-  booking_fee: number;
-  totalPrice?: number;
-}
 
 const DetailsBanner = ({ id, data, loading, error }: Props) => {
   const newData = data?.data[0];
-  const imageURL = process.env.REACT_APP_IMAGEURL;
+  const imageURL = process.env.REACT_APP_IMAGEURL || "";
   const [selectedImage, setSelectedImage] = useState(
     newData ? newData?.imgs[0]?.img : ""
   );
-  //console.log(newData?.enableseat);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+
   const enableSeat = newData?.enableseat;
   const [tickets, setTickets] = useState<any>([]);
   const [bookFees, setbookFees] = useState<any>([]);
   const [ticketsQty, setTicketsQty] = useState<any>([]);
   const navigate = useNavigate();
 
+  const getYouTubeThumbnail = (url: string) => {
+    if (!url) return "";
+    const videoId = url.match(
+      /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
+    )?.[1];
+    return videoId ? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg` : "";
+  };
+
   useEffect(() => {
     if (newData) {
       setSelectedImage(newData?.imgs[0]?.img);
-
       setTickets(
-        (
-          prevTickets: {
-            price: number;
-            discount_price: number;
-            event_id: number;
-            id: number;
-            name: string;
-            booking_fee: number;
-            qty: number;
-            issued_qty: number;
-          }[]
-        ) => {
-          if (prevTickets.length === newData.ticketCategories.length)
-            return prevTickets;
-          return newData.ticketCategories.map((category: any) => ({
-            price: category.price,
-            discount_price: category.discount_price,
-            event_id: category.event_id,
-            id: category.id,
-            name: category.name,
-            booking_fee: category.booking_fee,
-            qty: 0,
-            issued_qty: category.quantity,
-          }));
-        }
+        newData.ticketCategories.map((category: any) => ({
+          price: category.price,
+          discount_price: category.discount_price,
+          event_id: category.event_id,
+          id: category.id,
+          name: category.name,
+          booking_fee: category.booking_fee,
+          qty: 0,
+          issued_qty: category.quantity,
+        }))
       );
 
-      setTicketsQty((prevQty: { qty: number }[]) => {
-        if (prevQty.length === newData.ticketCategories.length) return prevQty;
-        return newData.ticketCategories.map((category: any) => ({
+      setTicketsQty(
+        newData.ticketCategories.map((category: any) => ({
           qty: category.quantity,
-        }));
-      });
+        }))
+      );
 
-      setbookFees((prevFees: BookingFee[]) => {
-        if (prevFees.length === newData.ticketCategories.length)
-          return prevFees;
-
-        return newData.ticketCategories.map(
-          (category: { booking_fee: number }) => ({
-            booking_fee: category.booking_fee,
-          })
-        );
-      });
+      setbookFees(
+        newData.ticketCategories.map((category: any) => ({
+          booking_fee: category.booking_fee,
+        }))
+      );
     }
-  }, [newData]); // ✅ `data` dependency removed to avoid unnecessary updates
+  }, [data, newData]);
 
+  // event info
   const eventInfo = (newData: any) => {
     const options = [
-      // {
-      //   name: "Status",
-      //   value: newData?.status,
-      // },
       {
         name: "Venue",
         value: newData?.venue,
@@ -155,17 +125,13 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
       newData?.to_date && newData?.to_date !== ""
         ? moment(newData?.to_date)
         : moment(newData?.from_date);
-
-    // Calculate the difference in days
     return endDateMoment.diff(startDateMoment, "days") + 1;
   };
-  //console.log(newData);
+
   const currency = getCurrency(newData);
-  //console.log(currency);
   const currencyName = getCurrencyName(newData);
-  // console.log(currencyName);
   const isButtonEnabled = tickets.some((item: any) => item.qty > 0);
-  // console.log(currencyName);
+
   const increment = (index: number) => {
     const updatedCategories = [...tickets];
     const updatedQty = [...ticketsQty];
@@ -189,62 +155,47 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
       setTickets(updatedCategories);
     }
   };
+
   const handleQuantity = (
     index: number,
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const updatedCategories = [...tickets];
     const updatedQty = [...ticketsQty];
-    //console.log(updatedQty);
     updatedCategories[index].qty = Number(e.target.value);
-
     setTickets(updatedCategories);
   };
 
   const calculateTotalPrice = (category: any, index: number) => {
-    const updatedCategories = [...tickets]; // 🚨 Creating a new state copy inside render
+    const updatedCategories = [...tickets];
     const updatedBookFees = [...bookFees];
-
     const qty = category.qty > 0 ? category.qty : 1;
     const bookFee = updatedBookFees[index].booking_fee;
     const newBookFee = bookFee * qty;
     const newPrice = category.price * qty;
-    const totalPrice = newBookFee + newPrice;
-
-    updatedCategories[index].booking_fee = newBookFee; // 🚨 Updating state directly inside render
-    //console.log(totalPrice);
-    return newPrice;
+    updatedCategories[index].booking_fee = newBookFee;
+    return newPrice.toFixed(2); // Ensure the price is fixed to 2 decimal places
   };
 
   const goToCheckout = () => {
     const { currency, title } = newData;
-
-    const updatedTickets = tickets.map((ticket: any, index: number) => ({
-      ...ticket,
-      totalPrice: calculateTotalPrice(ticket, index), // Ensure price is updated
-    }));
-
     navigate("/checkout", {
-      state: { tickets: updatedTickets, data: { currency, title } },
+      state: { tickets: tickets, data: { currency, title } },
     });
   };
 
-  const eventData = data?.data?.[0];
-  const isPastEvent =
-    eventData && moment(eventData.from_date).isBefore(moment(), "day");
-
   return (
-    <div className="detailsBanner  ">
+    <div className="detailsBanner">
       {!loading ? (
         <>
           {!!data && (
             <Fragment>
-              {/* <div className="">
+              <div className="backdrop-img">
                 <Img src={imageURL + newData?.imgs[0]?.img} />
-              </div> */}
+              </div>
               <div className="opacity-layer"></div>
               <ContentWrapper>
-                <div className="content w-full h-full">
+                <div className="content">
                   <div className="left">
                     {newData?.imgs[0]?.img ? (
                       <Img
@@ -254,42 +205,86 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                     ) : (
                       <Img className="posterImg" src={PosterFallback} />
                     )}
-                    <div className="w-full hidden my-6 max-w-10 lg:max-w-none mx-auto lg:block">
-                      <div className="grid gap-6 grid-cols-4">
-                        {newData?.imgs?.map((item: any, i: number) => (
-                          <button
-                            key={i}
-                            className="uppercase text-customBlack font-medium text-sm bg-white rounded-md items-center justify-center cursor-pointer h-24 flex relative"
-                            type="button"
-                            onClick={() => setSelectedImage(item.img)}
-                          >
-                            <span>Image view</span>
-                            <span className="rounded-md overflow-hidden inset-0 absolute">
+
+                    {/* Responsive Gallery Section */}
+                    <div className="w-full my-6 mx-auto">
+                      <h3 className="text-xl font-bold text-white mb-4 lg:hidden">
+                        Gallery
+                      </h3>
+                      <div className="flex flex-wrap gap-3 lg:gap-4 justify-center lg:justify-start">
+                        {/* Image Thumbnails */}
+                        {newData?.imgs
+                          ?.slice(0, 4)
+                          .map((item: any, i: number) => (
+                            <button
+                              key={i}
+                              className={`group relative w-[calc(50%-6px)] sm:w-[calc(33%-8px)] md:w-[calc(25%-12px)] lg:w-24 h-24 bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                              type="button"
+                              onClick={() => setSelectedImage(item.img)}
+                            >
+                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 z-10"></div>
                               <Img
-                                className="object-center object-cover w-full h-full"
+                                className="object-cover w-full h-full"
                                 alt={`${newData.title} ${item.sn}`}
                                 src={imageURL + item.img}
                               />
+                              <div
+                                className={`absolute inset-0 ring-2 ring-offset-2 transition-all duration-300 ${
+                                  selectedImage === item.img
+                                    ? "ring-red-500 opacity-100"
+                                    : "ring-transparent opacity-0"
+                                }`}
+                              ></div>
+                            </button>
+                          ))}
+
+                        {/* YouTube Thumbnail */}
+                        {newData?.youtubeurl && (
+                          <button
+                            className={`group relative w-[calc(50%-6px)] sm:w-[calc(33%-8px)] md:w-[calc(25%-12px)] lg:w-24 h-24 bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                            type="button"
+                            onClick={() => setShowVideoModal(true)}
+                          >
+                            <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-50 transition-all duration-300 z-10 flex items-center justify-center">
+                              <div className="w-12 h-12 bg-red-600 bg-opacity-90 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 24 24"
+                                  fill="white"
+                                  className="w-6 h-6 ml-1"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </div>
+                            </div>
+                            <Img
+                              className="object-cover w-full h-full"
+                              alt={`${newData.title} video preview`}
+                              src={getYouTubeThumbnail(newData.youtubeurl)}
+                            />
+                            <span className="absolute bottom-2 left-2 right-2 text-xs font-medium text-white bg-black bg-opacity-60 px-2 py-1 rounded truncate">
+                              Video Preview
                             </span>
-                            <span
-                              className={`${
-                                selectedImage === item.img
-                                  ? "ring-2 ring-offset-2 "
-                                  : ""
-                              }  ring-red-600 ring-offset-current rounded-md inset-0 absolute pointer-events-none`}
-                            ></span>
                           </button>
-                        ))}
+                        )}
                       </div>
                     </div>
                   </div>
 
                   <div className="right">
-                    {/* <div className="title">{`${newData.title}`}</div>
+                    <div className="title">{`${newData.title}`}</div>
                     <div className="subtitle">{newData.tagline}</div>
-                    <Tags data={getTags(newData?.tags)} /> */}
-
-                    <div className="title text-[#25aae1] text-center p-8">{`${newData.title}`}</div>
+                    <Tags data={getTags(newData?.tags)} />
+                    <div className="overview">
+                      <div className="heading">Description</div>
+                      <div className="description">
+                        {convertHTMLCode(newData?.des)}
+                      </div>
+                    </div>
 
                     <div className="info">
                       {eventInfo(newData).map((item: any, i: number) => {
@@ -318,31 +313,6 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                         );
                       })}
                     </div>
-                    <div className="overview">
-                      <div className="heading">Description</div>
-                      <div className="description">
-                        {convertHTMLCode(newData?.des)}
-                      </div>
-                      {isPastEvent && (
-                        <div className="text-red-600 mt-8 justify-center flex">
-                          Event no longer available for booking
-                        </div>
-                      )}
-                    </div>
-
-                    {/* {tags?.length > 0 && (
-                      <div className="info">
-                        <span className="text bold">Tags: </span>
-                        <span className="text">
-                          {tags?.map((d: any, i: number) => (
-                            <span key={i}>
-                              {d.name}
-                              {tags.length - 1 !== i && ", "}
-                            </span>
-                          ))}
-                        </span>
-                      </div>
-                    )} */}
 
                     <div className="pointer-events-auto">
                       <div className="flex h-full flex-col overflow-y-scroll shadow-xl">
@@ -355,24 +325,15 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                               Admission
                             </h2>
                           </div>
-                          <span className="text-sm font-small p-4 text-red-600  ">
+                          <span className="text-sm font-small text-red-600">
                             *includes booking fee
                           </span>
                           <div className="mt-8">
                             <div className="flow-root">
                               {enableSeat === 0 ? (
-                                <>
-                                  <span
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                      color: "black",
-                                    }}
-                                  >
-                                    Event is no longer available.
-                                  </span>
-                                </>
+                                <span className="flex items-center justify-center text-white">
+                                  Event is no longer available.
+                                </span>
                               ) : (
                                 <ul
                                   role="list"
@@ -380,116 +341,111 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                                 >
                                   {tickets.map((item: any, index: number) => (
                                     <li key={index} className="flex py-3">
-                                      {/* { item.qty} */}
                                       <div className="flex flex-1 flex-col">
                                         <div>
-                                          <div className="flex px-4 items-center text-base font-medium text-gray-600 ">
-                                            <h3 className="w-28 ">
+                                          <div className="flex items-center text-base font-medium text-white">
+                                            <h3 className="w-28">
                                               {item.name}
                                             </h3>
-                                            {/* <span className="text-xs italic font-small text-red-600  ">*Incl. {currency}{item.booking_fee} booking fees per ticket</span> */}
-
-                                            <form className="max-w-xs mx-auto">
-                                              <label
-                                                htmlFor="quantity"
-                                                className="block text-sm font-medium  text-gray-600 dark:text-white"
-                                              ></label>
-                                              {item.issued_qty <= 0 ? (
-                                                <div className="">
-                                                  <div className="relative flex items-center mx-auto max-w-[8rem]">
-                                                    <button
-                                                      type="button"
-                                                      id="decrement-button"
-                                                      className="relative md:text-sm text-xs  bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 dark:border-gray-600 hover:bg-black-100 border border-gray-200 rounded-s-lg rounded-e-lg px-5 py-2  focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
-                                                    >
-                                                      Sold Out
-                                                    </button>
-                                                  </div>
-                                                </div>
-                                              ) : (
-                                                <div className="">
-                                                  <div className="relative flex items-center mx-auto max-w-[8rem]">
-                                                    <button
-                                                      type="button"
-                                                      id="decrement-button"
-                                                      onClick={() =>
-                                                        decrement(index)
-                                                      }
-                                                      className="bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-red-700 border border-gray-200 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
-                                                    >
-                                                      <svg
-                                                        className="w-3 h-3 text-gray-900 dark:text-white"
-                                                        aria-hidden="true"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 18 2"
-                                                      >
-                                                        <path
-                                                          stroke="currentColor"
-                                                          strokeLinecap="round"
-                                                          strokeLinejoin="round"
-                                                          strokeWidth="2"
-                                                          d="M1 1h16"
-                                                        />
-                                                      </svg>
-                                                    </button>
-                                                    <input
-                                                      type="text"
-                                                      id="quantity"
-                                                      value={item.qty}
-                                                      className="border bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-red-600 focus:border-red-600 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-red-600 dark:focus:border-red-600"
-                                                      onChange={(e) =>
-                                                        handleQuantity(index, e)
-                                                      }
+                                            {item.issued_qty <= 0 ? (
+                                              <div className="relative flex items-center mx-auto max-w-[8rem]">
+                                                <button
+                                                  type="button"
+                                                  className="relative md:text-sm text-xs bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 dark:border-gray-600 hover:bg-black-100 border border-gray-200 rounded-s-lg rounded-e-lg px-5 py-2 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
+                                                >
+                                                  Sold Out
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <div className="relative flex items-center mx-auto max-w-[8rem]">
+                                                <button
+                                                  type="button"
+                                                  id="decrement-button"
+                                                  onClick={() =>
+                                                    decrement(index)
+                                                  }
+                                                  className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-red-700 border border-gray-200 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
+                                                >
+                                                  <svg
+                                                    className="w-3 h-3 text-gray-900 dark:text-white"
+                                                    aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 18 2"
+                                                  >
+                                                    <path
+                                                      stroke="currentColor"
+                                                      strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      strokeWidth="2"
+                                                      d="M1 1h16"
                                                     />
-                                                    <button
-                                                      type="button"
-                                                      id="increment-button"
-                                                      onClick={() =>
-                                                        increment(index)
-                                                      }
-                                                      className="bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-blue-700 border border-gray-100 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
-                                                    >
-                                                      <svg
-                                                        className="w-3 h-3 text-gray-900 dark:text-white"
-                                                        aria-hidden="true"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        fill="none"
-                                                        viewBox="0 0 18 18"
-                                                      >
-                                                        <path
-                                                          stroke="currentColor"
-                                                          strokeLinecap="round"
-                                                          strokeLinejoin="round"
-                                                          strokeWidth="2"
-                                                          d="M9 1v16M1 9h16"
-                                                        />
-                                                      </svg>
-                                                    </button>
-                                                  </div>
-                                                </div>
-                                              )}
-                                            </form>
-
+                                                  </svg>
+                                                </button>
+                                                <input
+                                                  type="text"
+                                                  id="quantity"
+                                                  value={item.qty}
+                                                  className="border bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-red-600 focus:border-red-600 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-red-600 dark:focus:border-red-600"
+                                                  onChange={(e) =>
+                                                    handleQuantity(index, e)
+                                                  }
+                                                />
+                                                <button
+                                                  type="button"
+                                                  id="increment-button"
+                                                  onClick={() =>
+                                                    increment(index)
+                                                  }
+                                                  className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-blue-700 border border-gray-100 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
+                                                >
+                                                  <svg
+                                                    className="w-3 h-3 text-gray-900 dark:text-white"
+                                                    aria-hidden="true"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 18 18"
+                                                  >
+                                                    <path
+                                                      stroke="currentColor"
+                                                      strokeLinecap="round"
+                                                      strokeLinejoin="round"
+                                                      strokeWidth="2"
+                                                      d="M9 1v16M1 9h16"
+                                                    />
+                                                  </svg>
+                                                </button>
+                                              </div>
+                                            )}
                                             <p className="ml-8 w-[120px]">
-                                              {`${currency}${calculateTotalPrice(
-                                                item,
-                                                index
-                                              )}`}{" "}
-                                              <br />
-                                              <span className="text-xs italic font-small text-red-600">
-                                                {" "}
-                                                +{" "}
-                                                <NumericFormat
-                                                  value={Number(
-                                                    item.booking_fee
-                                                  ).toFixed(2)}
-                                                  displayType={"text"}
-                                                  thousandSeparator={true}
-                                                  prefix={`${currency}`}
-                                                />{" "}
-                                                booking fee
-                                              </span>
+                                              <NumericFormat
+                                                value={calculateTotalPrice(
+                                                  item,
+                                                  index
+                                                )}
+                                                displayType={"text"}
+                                                thousandSeparator={true}
+                                                prefix={`${currency}`}
+                                                decimalScale={2} // Ensure 2 decimal places
+                                                fixedDecimalScale={true} // Always show 2 decimal places
+                                              />
+                                              {item.booking_fee > 0 && (
+                                                <span className="text-xs italic font-small text-red-600">
+                                                  {" "}
+                                                  +{" "}
+                                                  <NumericFormat
+                                                    value={Number(
+                                                      item.booking_fee
+                                                    ).toFixed(2)}
+                                                    displayType={"text"}
+                                                    thousandSeparator={true}
+                                                    prefix={`${currency}`}
+                                                    decimalScale={2}
+                                                    fixedDecimalScale={true}
+                                                  />{" "}
+                                                  booking fee
+                                                </span>
+                                              )}
                                             </p>
                                           </div>
                                         </div>
@@ -502,18 +458,14 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
                           </div>
                         </div>
 
-                        <div className="border-t border-gray-200 py-6 px-4">
+                        <div className="border-t border-gray-200 py-6">
                           <div className="mt-6">
                             <button
                               onClick={goToCheckout}
-                              disabled={isPastEvent || !isButtonEnabled}
+                              disabled={!isButtonEnabled}
                               className={`${
-                                isPastEvent
-                                  ? "opacity-50 cursor-not-allowed"
-                                  : ""
-                              } ${
                                 !isButtonEnabled ? "disabled" : ""
-                              } flex w-full items-center justify-center  rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
+                              } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
                             >
                               Buy Tickets
                             </button>
@@ -539,6 +491,27 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
           </ContentWrapper>
         </div>
       )}
+
+      <Modal
+        isOpen={showVideoModal}
+        onClose={() => setShowVideoModal(false)}
+        title="Video Preview"
+      >
+        <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-lg w-full">
+          <iframe
+            className="absolute top-0 left-0 w-full h-full"
+            src={`https://www.youtube.com/embed/${
+              newData?.youtubeurl?.match(
+                /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/
+              )?.[1]
+            }`}
+            title="YouTube video player"
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+      </Modal>
     </div>
   );
 };
