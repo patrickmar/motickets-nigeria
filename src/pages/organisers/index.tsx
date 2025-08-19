@@ -441,7 +441,7 @@ function Organisers() {
                     Get Started
                   </button>
                 </div>
-                <h6 className="p-6 font-semibold">What's included:</h6>
+                <h6 className="p-6 font-semibold">What&apos;s included:</h6>
                 <div className="p-6">
                   <ol className="list-inside">
                     <li className="mb-4 flex">
@@ -476,7 +476,7 @@ function Organisers() {
                           d="M4.5 12.75l6 6 9-13.5"
                         />
                       </svg>
-                      50K for forst 100 registrations.
+                      50K for first 100 registrations.
                     </li>
                     <li className="mb-4 flex">
                       <svg
@@ -510,7 +510,7 @@ function Organisers() {
                           d="M4.5 12.75l6 6 9-13.5"
                         />
                       </svg>
-                      Dedicated customize event page.
+                      Dedicated customized event page.
                     </li>
                     <li className="mb-4 flex">
                       <svg
