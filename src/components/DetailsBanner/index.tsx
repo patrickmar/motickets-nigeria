@@ -1,3 +1,5 @@
+// Enhanced DetailsBanner with artistic design
+
 import { useState, useEffect, Fragment, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
@@ -16,6 +18,7 @@ import {
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Modal from "../Modal";
+import SocialShareButtons from "../SocialShareButtons";
 
 type Props = {
   id: any;
@@ -36,7 +39,21 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   const [tickets, setTickets] = useState<any>([]);
   const [bookFees, setbookFees] = useState<any>([]);
   const [ticketsQty, setTicketsQty] = useState<any>([]);
+  const [ticketsPrice, setTicketsPrice] = useState<any>([]);
   const navigate = useNavigate();
+
+  // Check if event end date is past
+  const isEventPast = () => {
+    if (!newData?.to_date || newData.to_date === "") {
+      const eventStartTime = moment(
+        `${newData.from_date} ${newData.from_time}`,
+        "YYYY-MM-DD HH:mm:ss"
+      );
+      const currentTime = moment();
+      return currentTime.isAfter(eventStartTime.add(1, "hour"));
+    }
+    return moment(newData.to_date).isBefore(moment(), "day");
+  };
 
   const getYouTubeThumbnail = (url: string) => {
     if (!url) return "";
@@ -61,13 +78,16 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
           issued_qty: category.quantity,
         }))
       );
-
       setTicketsQty(
         newData.ticketCategories.map((category: any) => ({
           qty: category.quantity,
         }))
       );
-
+      setTicketsPrice(
+        newData.ticketCategories.map((category: any) => ({
+          pric: category.price,
+        }))
+      );
       setbookFees(
         newData.ticketCategories.map((category: any) => ({
           booking_fee: category.booking_fee,
@@ -76,20 +96,22 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
     }
   }, [data, newData]);
 
-  // event info
   const eventInfo = (newData: any) => {
     const options = [
       {
         name: "Venue",
         value: newData?.venue,
+        icon: "📍",
       },
       {
         name: "Category",
         value: newData?.event_cat,
+        icon: "🎯",
       },
       {
-        name: "Days",
-        value: differenceInDays(newData),
+        name: "Duration",
+        value: differenceInDays(newData) + " days",
+        icon: "📅",
       },
     ];
     return options;
@@ -98,20 +120,23 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   const dateInfo = (newData: any) => {
     const options = [
       {
-        name: "Start Date",
-        value: moment(newData?.from_date).format("MMM D, YYYY."),
+        name: "Starts",
+        value: moment(newData?.from_date).format("MMM D, YYYY"),
+        icon: "🚀",
       },
       {
-        name: "End Date",
+        name: "Ends",
         value: newData?.to_date
-          ? moment(newData?.to_date).format("MMM D, YYYY.")
-          : "",
+          ? moment(newData?.to_date).format("MMM D, YYYY")
+          : "One day event",
+        icon: "🎉",
       },
       {
         name: "Time",
         value: moment(newData?.from_date + " " + newData?.from_time).format(
-          "hh:mmA"
+          "hh:mm A"
         ),
+        icon: "⏰",
       },
     ];
     return options;
@@ -130,17 +155,23 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
 
   const currency = getCurrency(newData);
   const currencyName = getCurrencyName(newData);
-  const isButtonEnabled = tickets.some((item: any) => item.qty > 0);
+  const isButtonEnabled =
+    tickets.some((item: any) => item.qty > 0) && !isEventPast();
 
   const increment = (index: number) => {
+    if (isEventPast()) return;
+
     const updatedCategories = [...tickets];
     const updatedQty = [...ticketsQty];
+    const updatedPrice = [...ticketsPrice];
 
+    if (updatedPrice[index].pric == 0.0 && updatedCategories[index].qty >= 1) {
+      updatedCategories[index].qty = 0;
+      toast("🎟️ You can only get 1 free ticket per order");
+    }
     if (updatedCategories[index].qty >= updatedQty[index].qty) {
       toast(
-        "You can not buy more than the remaining tickets ( " +
-          updatedQty[index].qty +
-          " ), kindly buy another ticket type"
+        `⚠️ Only ${updatedQty[index].qty} tickets remaining for ${updatedCategories[index].name}`
       );
     } else {
       updatedCategories[index].qty += 1;
@@ -149,6 +180,8 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
   };
 
   const decrement = (index: number) => {
+    if (isEventPast()) return;
+
     const updatedCategories = [...tickets];
     if (updatedCategories[index].qty > 0) {
       updatedCategories[index].qty -= 1;
@@ -160,6 +193,8 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
     index: number,
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
+    if (isEventPast()) return;
+
     const updatedCategories = [...tickets];
     const updatedQty = [...ticketsQty];
     updatedCategories[index].qty = Number(e.target.value);
@@ -174,10 +209,12 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
     const newBookFee = bookFee * qty;
     const newPrice = category.price * qty;
     updatedCategories[index].booking_fee = newBookFee;
-    return newPrice.toFixed(2); // Ensure the price is fixed to 2 decimal places
+    return newPrice.toFixed(2);
   };
 
   const goToCheckout = () => {
+    if (isEventPast()) return;
+
     const { currency, title } = newData;
     navigate("/checkout", {
       state: { tickets: tickets, data: { currency, title } },
@@ -190,288 +227,315 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
         <>
           {!!data && (
             <Fragment>
+              {/* Enhanced Background with Gradient Overlay */}
               <div className="backdrop-img">
                 <Img src={imageURL + newData?.imgs[0]?.img} />
+                <div className="gradient-overlay"></div>
               </div>
-              <div className="opacity-layer"></div>
+
               <ContentWrapper>
                 <div className="content">
+                  {/* Left Column - Visual Content */}
                   <div className="left">
-                    {newData?.imgs[0]?.img ? (
-                      <Img
-                        className="posterImg"
-                        src={imageURL + selectedImage}
-                      />
-                    ) : (
-                      <Img className="posterImg" src={PosterFallback} />
-                    )}
+                    {/* Main Poster with Elegant Frame */}
+                    <div className="poster-container">
+                      {newData?.imgs[0]?.img ? (
+                        <Img
+                          className="posterImg"
+                          src={imageURL + selectedImage}
+                        />
+                      ) : (
+                        <Img className="posterImg" src={PosterFallback} />
+                      )}
+                      {/* Event Status Badge */}
+                      {isEventPast() && (
+                        <div className="event-status-badge past">
+                          <span>Event Ended</span>
+                        </div>
+                      )}
+                      {newData?.youtubeurl && !isEventPast() && (
+                        <div className="event-status-badge video">
+                          <button
+                            onClick={() => setShowVideoModal(true)}
+                            className="video-preview-btn"
+                          >
+                            🎬 Watch Trailer
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
-                    {/* Responsive Gallery Section */}
-                    <div className="w-full my-6 mx-auto">
-                      <h3 className="text-xl font-bold text-white mb-4 lg:hidden">
-                        Gallery
-                      </h3>
-                      <div className="flex flex-wrap gap-3 lg:gap-4 justify-center lg:justify-start">
-                        {/* Image Thumbnails */}
+                    {/* Enhanced Gallery Section */}
+                    <div className="gallery-section">
+                      <h3 className="gallery-title">Event Gallery</h3>
+                      <div className="gallery-grid">
                         {newData?.imgs
                           ?.slice(0, 4)
                           .map((item: any, i: number) => (
-                            <button
+                            <div
                               key={i}
-                              className={`group relative w-[calc(50%-6px)] sm:w-[calc(33%-8px)] md:w-[calc(25%-12px)] lg:w-24 h-24 bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
-                              type="button"
+                              className={`gallery-item ${
+                                selectedImage === item.img ? "active" : ""
+                              }`}
                               onClick={() => setSelectedImage(item.img)}
                             >
-                              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 z-10"></div>
-                              <Img
-                                className="object-cover w-full h-full"
-                                alt={`${newData.title} ${item.sn}`}
-                                src={imageURL + item.img}
-                              />
-                              <div
-                                className={`absolute inset-0 ring-2 ring-offset-2 transition-all duration-300 ${
-                                  selectedImage === item.img
-                                    ? "ring-red-500 opacity-100"
-                                    : "ring-transparent opacity-0"
-                                }`}
-                              ></div>
-                            </button>
-                          ))}
-
-                        {/* YouTube Thumbnail */}
-                        {newData?.youtubeurl && (
-                          <button
-                            className={`group relative w-[calc(50%-6px)] sm:w-[calc(33%-8px)] md:w-[calc(25%-12px)] lg:w-24 h-24 bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl`}
-                            type="button"
-                            onClick={() => setShowVideoModal(true)}
-                          >
-                            <div className="absolute inset-0 bg-black bg-opacity-30 group-hover:bg-opacity-50 transition-all duration-300 z-10 flex items-center justify-center">
-                              <div className="w-12 h-12 bg-red-600 bg-opacity-90 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-all duration-300">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  viewBox="0 0 24 24"
-                                  fill="white"
-                                  className="w-6 h-6 ml-1"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
+                              <div className="image-frame">
+                                <Img
+                                  src={imageURL + item.img}
+                                  alt={`${newData.title} ${i + 1}`}
+                                />
                               </div>
                             </div>
-                            <Img
-                              className="object-cover w-full h-full"
-                              alt={`${newData.title} video preview`}
-                              src={getYouTubeThumbnail(newData.youtubeurl)}
-                            />
-                            <span className="absolute bottom-2 left-2 right-2 text-xs font-medium text-white bg-black bg-opacity-60 px-2 py-1 rounded truncate">
-                              Video Preview
-                            </span>
-                          </button>
+                          ))}
+
+                        {newData?.youtubeurl && (
+                          <div
+                            className="gallery-item video-thumbnail"
+                            onClick={() => setShowVideoModal(true)}
+                          >
+                            <div className="image-frame">
+                              <Img
+                                src={getYouTubeThumbnail(newData.youtubeurl)}
+                                alt={`${newData.title} video`}
+                              />
+                              <div className="video-overlay">
+                                <div className="play-icon">
+                                  <svg viewBox="0 0 24 24" fill="white">
+                                    <path d="M8 5v14l11-7z" />
+                                  </svg>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         )}
                       </div>
                     </div>
                   </div>
 
+                  {/* Right Column - Content */}
                   <div className="right">
-                    <div className="title">{`${newData.title}`}</div>
-                    <div className="subtitle">{newData.tagline}</div>
-                    <Tags data={getTags(newData?.tags)} />
-                    <div className="overview">
-                      <div className="heading">Description</div>
-                      <div className="description">
+                    {/* Header Section */}
+                    <div className="header-section">
+                      <div className="title">{newData.title}</div>
+                      <div className="subtitle">{newData.tagline}</div>
+                      <Tags data={getTags(newData?.tags)} />
+                    </div>
+
+                    {/* Description Section */}
+                    <div className="description-section">
+                      <h3 className="section-title">
+                        <span className="title-icon">📖</span>
+                        About This Event
+                      </h3>
+                      <div className="description-content">
                         {convertHTMLCode(newData?.des)}
                       </div>
                     </div>
 
-                    <div className="info">
-                      {eventInfo(newData).map((item: any, i: number) => {
-                        return (
-                          item.value != null &&
-                          item.value !== "" && (
-                            <div className="infoItem" key={i}>
-                              <span className="text bold">{item.name}: </span>
-                              <span className="text">{item.value}</span>
-                            </div>
-                          )
-                        );
-                      })}
-                    </div>
-
-                    <div className="info">
-                      {dateInfo(newData).map((item: any, i: number) => {
-                        return (
-                          item.value != null &&
-                          item.value !== "" && (
-                            <div className="infoItem" key={i}>
-                              <span className="text bold">{item.name}: </span>
-                              <span className="text">{item.value}</span>
-                            </div>
-                          )
-                        );
-                      })}
-                    </div>
-
-                    <div className="pointer-events-auto">
-                      <div className="flex h-full flex-col overflow-y-scroll shadow-xl">
-                        <div className="flex-1 overflow-y-auto py-6">
-                          <div className="flex items-start justify-between">
-                            <h2
-                              className="text-lg font-medium text-white"
-                              id="slide-over-title"
-                            >
-                              Admission
-                            </h2>
-                          </div>
-                          <span className="text-sm font-small text-red-600">
-                            *includes booking fee
-                          </span>
-                          <div className="mt-8">
-                            <div className="flow-root">
-                              {enableSeat === 0 ? (
-                                <span className="flex items-center justify-center text-white">
-                                  Event is no longer available.
-                                </span>
-                              ) : (
-                                <ul
-                                  role="list"
-                                  className="-my-6 divide-y divide-gray-200"
-                                >
-                                  {tickets.map((item: any, index: number) => (
-                                    <li key={index} className="flex py-3">
-                                      <div className="flex flex-1 flex-col">
-                                        <div>
-                                          <div className="flex items-center text-base font-medium text-white">
-                                            <h3 className="w-28">
-                                              {item.name}
-                                            </h3>
-                                            {item.issued_qty <= 0 ? (
-                                              <div className="relative flex items-center mx-auto max-w-[8rem]">
-                                                <button
-                                                  type="button"
-                                                  className="relative md:text-sm text-xs bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 dark:border-gray-600 hover:bg-black-100 border border-gray-200 rounded-s-lg rounded-e-lg px-5 py-2 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
-                                                >
-                                                  Sold Out
-                                                </button>
-                                              </div>
-                                            ) : (
-                                              <div className="relative flex items-center mx-auto max-w-[8rem]">
-                                                <button
-                                                  type="button"
-                                                  id="decrement-button"
-                                                  onClick={() =>
-                                                    decrement(index)
-                                                  }
-                                                  className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-red-700 border border-gray-200 rounded-s-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
-                                                >
-                                                  <svg
-                                                    className="w-3 h-3 text-gray-900 dark:text-white"
-                                                    aria-hidden="true"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 18 2"
-                                                  >
-                                                    <path
-                                                      stroke="currentColor"
-                                                      strokeLinecap="round"
-                                                      strokeLinejoin="round"
-                                                      strokeWidth="2"
-                                                      d="M1 1h16"
-                                                    />
-                                                  </svg>
-                                                </button>
-                                                <input
-                                                  type="text"
-                                                  id="quantity"
-                                                  value={item.qty}
-                                                  className="border bg-gray-50 border-x-0 border-gray-300 h-11 text-center text-gray-900 text-sm focus:ring-red-600 focus:border-red-600 block w-full py-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-red-600 dark:focus:border-red-600"
-                                                  onChange={(e) =>
-                                                    handleQuantity(index, e)
-                                                  }
-                                                />
-                                                <button
-                                                  type="button"
-                                                  id="increment-button"
-                                                  onClick={() =>
-                                                    increment(index)
-                                                  }
-                                                  className="bg-gray-100 dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-gray-600 hover:bg-blue-700 border border-gray-100 rounded-e-lg p-3 h-11 focus:ring-gray-100 dark:focus:ring-gray-700 focus:outline-none"
-                                                >
-                                                  <svg
-                                                    className="w-3 h-3 text-gray-900 dark:text-white"
-                                                    aria-hidden="true"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 18 18"
-                                                  >
-                                                    <path
-                                                      stroke="currentColor"
-                                                      strokeLinecap="round"
-                                                      strokeLinejoin="round"
-                                                      strokeWidth="2"
-                                                      d="M9 1v16M1 9h16"
-                                                    />
-                                                  </svg>
-                                                </button>
-                                              </div>
-                                            )}
-                                            <p className="ml-8 w-[120px]">
-                                              <NumericFormat
-                                                value={calculateTotalPrice(
-                                                  item,
-                                                  index
-                                                )}
-                                                displayType={"text"}
-                                                thousandSeparator={true}
-                                                prefix={`${currency}`}
-                                                decimalScale={2} // Ensure 2 decimal places
-                                                fixedDecimalScale={true} // Always show 2 decimal places
-                                              />
-                                              {item.booking_fee > 0 && (
-                                                <span className="text-xs italic font-small text-red-600">
-                                                  {" "}
-                                                  +{" "}
-                                                  <NumericFormat
-                                                    value={Number(
-                                                      item.booking_fee
-                                                    ).toFixed(2)}
-                                                    displayType={"text"}
-                                                    thousandSeparator={true}
-                                                    prefix={`${currency}`}
-                                                    decimalScale={2}
-                                                    fixedDecimalScale={true}
-                                                  />{" "}
-                                                  booking fee
-                                                </span>
-                                              )}
-                                            </p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="border-t border-gray-200 py-6">
-                          <div className="mt-6">
-                            <button
-                              onClick={goToCheckout}
-                              disabled={!isButtonEnabled}
-                              className={`${
-                                !isButtonEnabled ? "disabled" : ""
-                              } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
-                            >
-                              Buy Tickets
-                            </button>
-                          </div>
+                    {/* Info Cards */}
+                    <div className="info-cards">
+                      <div className="info-card">
+                        <h4 className="card-title">
+                          <span className="card-icon">ℹ️</span>
+                          Event Details
+                        </h4>
+                        <div className="card-content">
+                          {eventInfo(newData).map(
+                            (item: any, i: number) =>
+                              item.value && (
+                                <div key={i} className="info-row">
+                                  <span className="info-icon">{item.icon}</span>
+                                  <div className="info-text">
+                                    <div className="info-label">
+                                      {item.name}
+                                    </div>
+                                    <div className="info-value">
+                                      {item.value}
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                          )}
                         </div>
                       </div>
+
+                      <div className="info-card">
+                        <h4 className="card-title">
+                          <span className="card-icon">📅</span>
+                          Date & Time
+                        </h4>
+                        <div className="card-content">
+                          {dateInfo(newData).map(
+                            (item: any, i: number) =>
+                              item.value && (
+                                <div key={i} className="info-row">
+                                  <span className="info-icon">{item.icon}</span>
+                                  <div className="info-text">
+                                    <div className="info-label">
+                                      {item.name}
+                                    </div>
+                                    <div className="info-value">
+                                      {item.value}
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Social Sharing */}
+                    {!isEventPast() && (
+                      <div className="social-section">
+                        <h4 className="section-title">Share This Event</h4>
+                        <SocialShareButtons eventData={newData} />
+                      </div>
+                    )}
+
+                    {/* Tickets Section */}
+                    <div className="tickets-section">
+                      <div className="tickets-header">
+                        <h2 className="tickets-title">🎟️ Get Your Tickets</h2>
+                        {!isEventPast() && (
+                          <div className="booking-fee-note">
+                            * All prices include booking fees
+                          </div>
+                        )}
+                      </div>
+
+                      {isEventPast() ? (
+                        <div className="event-ended-message">
+                          <div className="ended-icon">❌</div>
+                          <div className="ended-text">
+                            <h3>This event has ended</h3>
+                            <p>Thank you for your interest!</p>
+                          </div>
+                        </div>
+                      ) : enableSeat === 0 ? (
+                        <div className="event-unavailable-message">
+                          <div className="unavailable-icon">🚫</div>
+                          <div className="unavailable-text">
+                            <h3>Event Unavailable</h3>
+                            <p>
+                              This event is no longer available for booking.
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="tickets-list">
+                          {tickets.map((item: any, index: number) => (
+                            <div
+                              key={index}
+                              className={`ticket-item ${
+                                item.issued_qty <= 0 ? "sold-out" : ""
+                              }`}
+                            >
+                              <div className="ticket-info">
+                                <h4 className="ticket-name">{item.name}</h4>
+                                <div className="ticket-price">
+                                  {item.price == 0 ? (
+                                    <span className="free-badge">FREE</span>
+                                  ) : (
+                                    <NumericFormat
+                                      value={item.price}
+                                      displayType={"text"}
+                                      thousandSeparator={true}
+                                      prefix={`${currency} `}
+                                      decimalScale={2}
+                                      fixedDecimalScale={true}
+                                    />
+                                  )}
+                                  {item.booking_fee > 0 && (
+                                    <span className="fee-note">
+                                      + {currency}
+                                      {Number(item.booking_fee).toFixed(2)} fee
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="ticket-availability">
+                                  {item.issued_qty <= 0 ? (
+                                    <span className="sold-out-badge">
+                                      Sold Out
+                                    </span>
+                                  ) : (
+                                    <span className="available-text">
+                                      {item.issued_qty} tickets left
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {item.issued_qty > 0 && (
+                                <div className="ticket-controls">
+                                  <div className="quantity-selector">
+                                    <button
+                                      type="button"
+                                      onClick={() => decrement(index)}
+                                      className="quantity-btn minus"
+                                      disabled={item.qty === 0}
+                                    >
+                                      −
+                                    </button>
+                                    <input
+                                      type="text"
+                                      value={item.qty}
+                                      onChange={(e) => handleQuantity(index, e)}
+                                      className="quantity-input"
+                                      readOnly={
+                                        item.price === 0 && item.qty >= 1
+                                      }
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => increment(index)}
+                                      className="quantity-btn plus"
+                                      disabled={
+                                        (item.price === 0 && item.qty >= 1) ||
+                                        item.qty >= item.issued_qty
+                                      }
+                                    >
+                                      +
+                                    </button>
+                                  </div>
+                                  {item.qty > 0 && (
+                                    <div className="ticket-subtotal">
+                                      <NumericFormat
+                                        value={calculateTotalPrice(item, index)}
+                                        displayType={"text"}
+                                        thousandSeparator={true}
+                                        prefix={`${currency} `}
+                                        decimalScale={2}
+                                        fixedDecimalScale={true}
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Checkout Button */}
+                      {!isEventPast() && enableSeat !== 0 && (
+                        <div className="checkout-section">
+                          <button
+                            onClick={goToCheckout}
+                            disabled={!isButtonEnabled}
+                            className={`checkout-btn ${
+                              !isButtonEnabled ? "disabled" : "enabled"
+                            }`}
+                          >
+                            <span className="btn-text">
+                              {isButtonEnabled
+                                ? "Continue to Checkout"
+                                : "Select Tickets"}
+                            </span>
+                            <span className="btn-icon">→</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -495,11 +559,11 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
       <Modal
         isOpen={showVideoModal}
         onClose={() => setShowVideoModal(false)}
-        title="Video Preview"
+        title="Event Trailer"
       >
-        <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-lg w-full">
+        <div className="video-container">
           <iframe
-            className="absolute top-0 left-0 w-full h-full"
+            className="video-iframe"
             src={`https://www.youtube.com/embed/${
               newData?.youtubeurl?.match(
                 /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?]+)/

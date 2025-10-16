@@ -68,10 +68,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/financial-report/:sn"
-                element={<FinancialTable />}
-              />
+
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/contact-us" element={<ContactUs />} />

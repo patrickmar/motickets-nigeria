@@ -1,178 +1,697 @@
-@import "../../mixins.scss";
+// styles.scss - Artistic Design
+
+// Remove the commented code at the beginning and use this:
+
 .detailsBanner {
-  overflow: hidden;
-  width: 100%;
-  background-color: #f9f9f9;
-  padding-top: 100px;
-  margin-bottom: 50px;
-  @include md {
-    // margin-bottom: 0;
-    padding-top: 120px;
-    // min-height: 700px;
-    height: max-content;
-  }
+  position: relative;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding-top: 44px;
+
   .backdrop-img {
-    width: 100%;
-    height: 100%;
     position: absolute;
     top: 0;
     left: 0;
-    opacity: 0.5;
-    // overflow: hidden;
-    .lazy-load-image-background {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+
+    img {
       width: 100%;
       height: 100%;
-      img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center;
-      }
+      object-fit: cover;
+      filter: brightness(0.4);
     }
-  }
-  .opacity-layer {
-    width: 100%;
-    height: 250px;
-    // background: linear-gradient(180deg, rgba(4, 21, 45, 0) 0%, #04152d 79.17%);
-    position: absolute;
-    bottom: 0;
-    left: 0;
+
+    .gradient-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        135deg,
+        rgba(102, 126, 234, 0.9) 0%,
+        rgba(118, 75, 162, 0.8) 100%
+      );
+    }
   }
 
   .content {
     display: flex;
+    gap: 3rem;
     position: relative;
-    flex-direction: column;
-    gap: 25px;
-    @include md {
-      gap: 50px;
-      flex-direction: row;
+    z-index: 2;
+    padding: 2rem 0;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 2rem;
     }
-    .left {
-      flex-shrink: 0;
+  }
+
+  // Left Column Styles
+  .left {
+    flex: 0 0 40%;
+
+    @media (max-width: 768px) {
+      flex: 1;
+    }
+
+    .poster-container {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: translateY(-5px);
+      }
+
       .posterImg {
         width: 100%;
-        display: block;
-        border-radius: 12px;
-        @include md {
-          max-width: 350px;
-          min-height: 525px;
+        height: 500px;
+        object-fit: cover;
+
+        @media (max-width: 768px) {
+          height: 400px;
         }
-        @include lg {
-          max-width: 500px;
-          min-height: 525px;
+      }
+
+      .event-status-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        backdrop-filter: blur(10px);
+
+        &.past {
+          background: rgba(239, 68, 68, 0.9);
+          color: white;
+        }
+
+        &.video {
+          background: rgba(34, 197, 94, 0.9);
+          color: white;
+        }
+
+        .video-preview-btn {
+          background: none;
+          border: none;
+          color: inherit;
+          font-weight: inherit;
+          cursor: pointer;
         }
       }
     }
-    .right {
-      .title {
-        font-size: 28px;
-        line-height: 12px;
-        @include md {
-          font-size: 34px;
-          line-height: 16px;
-        }
+
+    .gallery-section {
+      margin-top: 2rem;
+
+      .gallery-title {
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-align: center;
       }
-      .subtitle {
-        color: aliceblue;
-        font-size: 16px;
-        line-height: 24px;
-        margin-bottom: 15px;
-        font-style: italic;
-        opacity: 0.5;
-        @include md {
-          font-size: 20px;
-          line-height: 28px;
+
+      .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+
+        @media (min-width: 768px) {
+          grid-template-columns: repeat(3, 1fr);
         }
-      }
-      .tags {
-        margin-bottom: 25px;
-        flex-flow: row wrap;
-      }
-      .overview {
-        margin-bottom: 25px;
-        .heading {
-          color: #25aae1;
-          font-size: 24px;
-          margin-bottom: 10px;
-        }
-        .description {
-          line-height: 24px;
-          @include md {
-            padding-right: 100px;
+
+        .gallery-item {
+          position: relative;
+          border-radius: 12px;
+          overflow: hidden;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          border: 2px solid transparent;
+
+          &:hover {
+            transform: scale(1.05);
+            border-color: #ff6b6b;
+          }
+
+          &.active {
+            border-color: #4ecdc4;
+          }
+
+          .image-frame {
+            position: relative;
+            width: 100%;
+            height: 120px;
+            overflow: hidden;
+
+            img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              transition: transform 0.3s ease;
+            }
+          }
+
+          &.video-thumbnail {
+            .video-overlay {
+              position: absolute;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              background: rgba(0, 0, 0, 0.5);
+              display: flex;
+              align-items: center;
+              justify-content: center;
+
+              .play-icon {
+                width: 40px;
+                height: 40px;
+                background: #ff6b6b;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: transform 0.3s ease;
+
+                svg {
+                  width: 20px;
+                  height: 20px;
+                  margin-left: 2px;
+                }
+              }
+            }
+
+            &:hover .play-icon {
+              transform: scale(1.1);
+            }
           }
         }
       }
-      .row {
-        overflow: hidden;
+    }
+  }
+
+  // Right Column Styles
+  .right {
+    flex: 1;
+    color: white;
+
+    .header-section {
+      margin-bottom: 2rem;
+
+      .title {
+        font-size: 3rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+
+        @media (max-width: 768px) {
+          font-size: 2rem;
+        }
+      }
+
+      .subtitle {
+        font-size: 1.25rem;
+        color: #e2e8f0;
+        margin-bottom: 1rem;
+        font-style: italic;
+      }
+    }
+
+    .description-section {
+      margin-bottom: 2rem;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      .section-title {
         display: flex;
         align-items: center;
-        gap: 25px;
-        margin-bottom: 25px;
+        gap: 0.5rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #4ecdc4;
+
+        .title-icon {
+          font-size: 1.25rem;
+        }
       }
 
-      .info {
-        overflow: hidden;
-        // border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 15px 0;
-        display: flex;
-        .infoItem {
-          margin-right: 10px;
-          display: flex;
-          flex-flow: row wrap;
+      .description-content {
+        line-height: 1.6;
+        color: #e2e8f0;
+      }
+    }
+
+    .info-cards {
+      display: grid;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+
+      @media (min-width: 768px) {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .info-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: transform 0.3s ease;
+
+        &:hover {
+          transform: translateY(-2px);
         }
-        .text {
-          margin-right: 10px;
-          opacity: 0.5;
-          line-height: 24px;
-          &.bold {
+
+        .card-title {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 1.25rem;
+          font-weight: 600;
+          margin-bottom: 1rem;
+          color: #ffd93d;
+        }
+
+        .card-content {
+          .info-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+            .info-icon {
+              font-size: 1.25rem;
+              flex-shrink: 0;
+              margin-top: 0.125rem;
+            }
+
+            .info-text {
+              flex: 1;
+
+              .info-label {
+                font-size: 0.875rem;
+                color: #cbd5e0;
+                margin-bottom: 0.25rem;
+              }
+
+              .info-value {
+                font-weight: 600;
+                color: white;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .social-section {
+      margin-bottom: 2rem;
+
+      .section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #4ecdc4;
+      }
+    }
+
+    .tickets-section {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      .tickets-header {
+        margin-bottom: 1.5rem;
+
+        .tickets-title {
+          font-size: 1.75rem;
+          font-weight: 700;
+          margin-bottom: 0.5rem;
+          color: #ffd93d;
+        }
+
+        .booking-fee-note {
+          color: #cbd5e0;
+          font-size: 0.875rem;
+        }
+      }
+
+      .event-ended-message,
+      .event-unavailable-message {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 2rem;
+        text-align: center;
+        justify-content: center;
+
+        .ended-icon,
+        .unavailable-icon {
+          font-size: 2rem;
+        }
+
+        .ended-text,
+        .unavailable-text {
+          h3 {
+            font-size: 1.5rem;
             font-weight: 600;
-            opacity: 1;
+            margin-bottom: 0.5rem;
+            color: #ff6b6b;
+          }
+
+          p {
+            color: #cbd5e0;
+          }
+        }
+      }
+
+      .tickets-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+
+        .ticket-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1.5rem;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          transition: all 0.3s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+          }
+
+          &.sold-out {
+            opacity: 0.6;
+            background: rgba(239, 68, 68, 0.1);
+          }
+
+          .ticket-info {
+            flex: 1;
+
+            .ticket-name {
+              font-size: 1.125rem;
+              font-weight: 600;
+              margin-bottom: 0.5rem;
+              color: white;
+            }
+
+            .ticket-price {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              margin-bottom: 0.5rem;
+
+              .free-badge {
+                background: #10b981;
+                color: white;
+                padding: 0.25rem 0.75rem;
+                border-radius: 20px;
+                font-size: 0.875rem;
+                font-weight: 600;
+              }
+
+              .fee-note {
+                font-size: 0.75rem;
+                color: #cbd5e0;
+                font-style: italic;
+              }
+            }
+
+            .ticket-availability {
+              .sold-out-badge {
+                background: #ef4444;
+                color: white;
+                padding: 0.25rem 0.75rem;
+                border-radius: 20px;
+                font-size: 0.75rem;
+                font-weight: 600;
+              }
+
+              .available-text {
+                font-size: 0.875rem;
+                color: #10b981;
+              }
+            }
+          }
+
+          .ticket-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+
+            .quantity-selector {
+              display: flex;
+              align-items: center;
+              background: rgba(255, 255, 255, 0.1);
+              border-radius: 8px;
+              overflow: hidden;
+
+              .quantity-btn {
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                color: white;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: background 0.3s ease;
+
+                &:hover:not(:disabled) {
+                  background: rgba(255, 255, 255, 0.3);
+                }
+
+                &:disabled {
+                  opacity: 0.5;
+                  cursor: not-allowed;
+                }
+
+                &.minus {
+                  background: rgba(239, 68, 68, 0.3);
+                }
+
+                &.plus {
+                  background: rgba(34, 197, 94, 0.3);
+                }
+              }
+
+              .quantity-input {
+                width: 50px;
+                height: 40px;
+                border: none;
+                background: rgba(255, 255, 255, 0.1);
+                color: white;
+                text-align: center;
+                font-weight: 600;
+
+                &:focus {
+                  outline: none;
+                  background: rgba(255, 255, 255, 0.2);
+                }
+              }
+            }
+
+            .ticket-subtotal {
+              font-weight: 600;
+              color: #ffd93d;
+              min-width: 80px;
+              text-align: right;
+            }
+          }
+        }
+      }
+
+      .checkout-section {
+        margin-top: 2rem;
+
+        .checkout-btn {
+          width: 100%;
+          padding: 1.25rem 2rem;
+          border: none;
+          border-radius: 12px;
+          font-size: 1.125rem;
+          font-weight: 600;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+
+          &.enabled {
+            background: linear-gradient(135deg, #4ecdc4, #44a08d);
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 15px 40px rgba(78, 205, 196, 0.4);
+            }
+          }
+
+          &.disabled {
+            background: rgba(255, 255, 255, 0.1);
+            color: #cbd5e0;
+            cursor: not-allowed;
+          }
+
+          .btn-text {
+            font-size: 1.125rem;
+          }
+
+          .btn-icon {
+            font-size: 1.25rem;
           }
         }
       }
     }
   }
+}
 
-  .detailsBannerSkeleton {
+// Video Modal Styles
+.video-container {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%;
+  height: 0;
+
+  .video-iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+  }
+}
+
+// Skeleton Loading - FIXED VERSION
+.detailsBannerSkeleton {
+  display: flex;
+  position: relative;
+  flex-direction: column;
+  gap: 25px;
+
+  @media (min-width: 768px) {
+    gap: 50px;
+    flex-direction: row;
+  }
+
+  .contentWrapper {
     display: flex;
-    position: relative;
-    flex-direction: column;
-    gap: 25px;
-    @include md {
-      gap: 50px;
-      flex-direction: row;
+    gap: 50px;
+  }
+
+  .left {
+    flex-shrink: 0;
+    width: 100%;
+    display: block;
+    border-radius: 12px;
+    aspect-ratio: 1/1.5;
+
+    @media (min-width: 768px) {
+      max-width: 350px;
     }
-    .contentWrapper {
-      display: flex;
-      gap: 50px;
-    }
-    .left {
-      flex-shrink: 0;
+  }
+
+  .right {
+    width: 100%;
+
+    .row {
       width: 100%;
-      display: block;
-      border-radius: 12px;
-      aspect-ratio: 1/1.5;
-      @include md {
-        max-width: 350px;
+      height: 25px;
+      margin-bottom: 20px;
+      border-radius: 50px;
+
+      &:nth-child(2) {
+        width: 75%;
+        margin-bottom: 50px;
+      }
+
+      &:nth-child(5) {
+        width: 50%;
+        margin-bottom: 50px;
       }
     }
-    .right {
-      width: 100%;
-      .row {
-        width: 100%;
-        height: 25px;
-        margin-bottom: 20px;
-        border-radius: 50px;
-        &:nth-child(2) {
-          width: 75%;
-          margin-bottom: 50px;
-        }
-        &:nth-child(5) {
-          width: 50%;
-          margin-bottom: 50px;
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .detailsBanner {
+    .content {
+      .right {
+        .tickets-section {
+          .tickets-list {
+            .ticket-item {
+              flex-direction: column;
+              align-items: stretch;
+              gap: 1rem;
+
+              .ticket-controls {
+                justify-content: space-between;
+              }
+            }
+          }
         }
       }
     }
   }
+}
+
+// Add shimmer animation for skeleton
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+// Add pulse animation
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
