@@ -1,4 +1,4 @@
-// Enhanced DetailsBanner with artistic design
+// Enhanced DetailsBanner with artistic background design
 
 import { useState, useEffect, Fragment, ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
@@ -227,7 +227,32 @@ const DetailsBanner = ({ id, data, loading, error }: Props) => {
         <>
           {!!data && (
             <Fragment>
-              {/* Enhanced Background with Gradient Overlay */}
+              {/* Artistic Background with Brand Colors */}
+              <div className="artistic-background">
+                {/* Main Gradient Background */}
+                <div className="main-gradient"></div>
+
+                {/* Animated Floating Elements */}
+                <div className="floating-elements">
+                  <div className="floating-circle circle-1"></div>
+                  <div className="floating-circle circle-2"></div>
+                  <div className="floating-circle circle-3"></div>
+                  <div className="floating-circle circle-4"></div>
+                  <div className="floating-circle circle-5"></div>
+                </div>
+
+                {/* Geometric Pattern Overlay */}
+                <div className="geometric-pattern"></div>
+
+                {/* Light Beams */}
+                <div className="light-beams">
+                  <div className="beam beam-1"></div>
+                  <div className="beam beam-2"></div>
+                  <div className="beam beam-3"></div>
+                </div>
+              </div>
+
+              {/* Original Backdrop Image with Enhanced Overlay */}
               <div className="backdrop-img">
                 <Img src={imageURL + newData?.imgs[0]?.img} />
                 <div className="gradient-overlay"></div>

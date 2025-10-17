@@ -16,9 +16,7 @@ import { validationSchema } from "./validation";
 import { NumericFormat } from "react-number-format";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrency, getCurrencyName } from "../../utils/functions";
-
 import usePost from "../../hooks/usePost";
-
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -60,7 +58,6 @@ const CheckoutForm = (props: Props) => {
     terms: false,
   };
 
-  console.log(tickets);
   const [formData, setFormData] = useState<ICheckoutForm>(initialValues);
   const [errors, setErrors] = useState<ICheckoutForm>(initialValues);
   const [touched, setTouched] = useState<IBoolean>({
@@ -73,79 +70,31 @@ const CheckoutForm = (props: Props) => {
   const [disabled, setDisabled] = useState(true);
   const [discount, setDiscount] = useState("");
   const [ticketDatas, setTicketDatas] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const { firstName, lastName, email, phoneNo, userConsent, terms } = formData;
   const [stripeToken, setStripeToken] = useState(null);
   const navigate = useNavigate();
 
-  const onToken = (token: any) => {
-    console.log(token);
-    setStripeToken(token);
-  };
   const currency = data && getCurrency(data);
   const currencyName = data && getCurrencyName(data);
   const query = new URLSearchParams(window.location.search);
 
   useEffect(() => {
-    // Check to see if this is a redirect back from Checkout
     const customId = "toastid";
-
     if (query.get("success")) {
-      toast.success("Order placed! You will receive an email confirmation.", {
-        toastId: customId,
-      });
-
-      console.log(tickets);
-
-      console.log(ticketDatas);
-      // navigate("/success", {
-      //   state: {
-
-      //     tickets: tickets,
-      //     ticketData: ticketDatas,
-      //     data: { data, totalAmount, subTotal, vat  } },
-      //   replace: true
-      //   })
+      toast.success(
+        "🎉 Order placed! You will receive an email confirmation.",
+        {
+          toastId: customId,
+        }
+      );
     }
-
     if (query.get("canceled")) {
       toast.error(
-        "Order canceled -- continue to shop around and checkout when you're ready."
+        "❌ Order canceled -- continue to shop around and checkout when you're ready."
       );
     }
   }, [query]);
-
-  // useEffect(() => {
-  //   const MakeRequest = async ()=>{
-
-  //          try {
-
-  //       const res= await axios.post(`${baseUrl}/stripe/payment`, {
-  //            tokenId : stripeToken.id,
-  //            amount: totalAmount*100,
-  //            currency: currencycode
-  //       });
-
-  //       console.log(tickets);
-
-  //       console.log(ticketDatas);
-  //       // navigate("/success", {
-  //       // state: {
-  //       //   stripeData: res.data,
-  //       //   tickets: tickets,
-  //       //   ticketData: ticketDatas,
-  //       //   data: { data, totalAmount, subTotal, vat  } },
-  //       // replace: true
-  //       // })
-
-  //      console.log(stripeData);
-  //   } catch (error) {
-  //       console.log(error);
-
-  //   }
-  //   };
-
-  //   stripeToken && MakeRequest();
-  // }, [stripeToken, navigate])
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevState) => ({
@@ -180,11 +129,16 @@ const CheckoutForm = (props: Props) => {
   const onSubmit: FormEventHandler<HTMLFormElement> = async (
     e: FormEvent<HTMLFormElement>
   ) => {
-    console.log("got");
     e.preventDefault();
+    setIsLoading(true);
+
     if (!terms) {
       toast.error("Please accept the terms and conditions");
-    } else {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
       const ticketData = {
         firstName,
         lastName,
@@ -199,13 +153,14 @@ const CheckoutForm = (props: Props) => {
       };
 
       setTicketDatas(ticketData);
-      console.log(ticketData);
       const res = await axios.post(`${baseUrl}/checkout/stripe_session`, {
         ticketData: ticketData,
       });
 
-      console.log(res.data);
       window.location.href = res.data.url;
+    } catch (error) {
+      toast.error("❌ Something went wrong. Please try again.");
+      setIsLoading(false);
     }
   };
 
@@ -226,33 +181,65 @@ const CheckoutForm = (props: Props) => {
     validationSchema.isValid(formData).then((valid) => setDisabled(!valid));
   };
 
-  const onDiscountChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setDiscount(e.target.value);
-  };
-
-  const onDiscountClick = () => {};
-
   return tickets ? (
-    <div className="mx-auto max-w-2xl px-4 pb-24 pt-32 sm:px-6 lg:max-w-7xl lg:px-8">
-      <div className="xl:gap-x-16 lg:gap-x-12 lg:grid-cols-2 grid max-w-[1200px]">
-        <div>
-          <div className="mb-6">
-            <h2 className="text-2xl font-bold text-white dark:text-white">
-              Checkout
-            </h2>
-          </div>
-          <div className="mt-10">
-            <h2 className="font-medium text-white text-lg">
-              Ticket information
-            </h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-gray-900 dark:to-blue-900 py-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#25aae1] to-[#c10006] bg-clip-text text-transparent mb-4">
+            Secure Checkout
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            Complete your purchase with confidence
+          </p>
+          <div className="w-24 h-1 bg-gradient-to-r from-[#25aae1] to-[#c10006] mx-auto rounded-full mt-4"></div>
+        </div>
 
-            <form onSubmit={onSubmit}>
-              <div className="grid gap-6 mb-6 md:grid-cols-2 mt-4">
-                <div>
+        <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+          {/* Left Column - Form */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-gradient-to-r from-[#25aae1] to-[#1e8fc5] rounded-full flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Personal Information
+              </h2>
+            </div>
+
+            <form onSubmit={onSubmit} className="space-y-6">
+              {/* Name Fields */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-2">
                   <label
                     htmlFor="firstName"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
                   >
+                    <svg
+                      className="w-4 h-4 text-[#25aae1]"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
                     First Name
                   </label>
                   <input
@@ -263,16 +250,18 @@ const CheckoutForm = (props: Props) => {
                     onChange={onChange}
                     onFocus={onFocus}
                     onBlur={onBlur}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-white/80 dark:bg-gray-700/80 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-[#25aae1] focus:ring-2 focus:ring-[#25aae1]/20 transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter your first name"
                   />
-                  <small className="form-error">
+                  <small className="form-error text-red-500 text-sm">
                     {touched?.firstName && errors?.firstName}
                   </small>
                 </div>
-                <div>
+
+                <div className="space-y-2">
                   <label
                     htmlFor="lastName"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
                   >
                     Last Name
                   </label>
@@ -284,40 +273,74 @@ const CheckoutForm = (props: Props) => {
                     onChange={onChange}
                     onFocus={onFocus}
                     onBlur={onBlur}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-white/80 dark:bg-gray-700/80 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-[#25aae1] focus:ring-2 focus:ring-[#25aae1]/20 transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    placeholder="Enter your last name"
                   />
-                  <small className="form-error">
+                  <small className="form-error text-red-500 text-sm">
                     {touched?.lastName && errors?.lastName}
                   </small>
                 </div>
-                <div>
-                  <label
-                    htmlFor="email"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+              </div>
+
+              {/* Email Field */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="email"
+                  className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  <svg
+                    className="w-4 h-4 text-[#25aae1]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={email}
-                    onChange={onChange}
-                    onFocus={onFocus}
-                    onBlur={onBlur}
-                    className="bg-gray-50 border border-gray-300 text-black text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  />
-                  <small className="form-error">
-                    {touched?.email && errors?.email}
-                  </small>
-                </div>
-                <div>
-                  <label
-                    htmlFor="phoneNo"
-                    className="block mb-2 text-sm font-medium text-white dark:text-white"
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={email}
+                  onChange={onChange}
+                  onFocus={onFocus}
+                  onBlur={onBlur}
+                  className="w-full px-4 py-3 bg-white/80 dark:bg-gray-700/80 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-[#25aae1] focus:ring-2 focus:ring-[#25aae1]/20 transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                  placeholder="your.email@example.com"
+                />
+                <small className="form-error text-red-500 text-sm">
+                  {touched?.email && errors?.email}
+                </small>
+              </div>
+
+              {/* Phone Field */}
+              <div className="space-y-2">
+                <label
+                  htmlFor="phoneNo"
+                  className="flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300"
+                >
+                  <svg
+                    className="w-4 h-4 text-[#25aae1]"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    Phone Number
-                  </label>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
+                  </svg>
+                  Phone Number
+                </label>
+                <div className="relative">
                   <PhoneInput
                     defaultCountry={defaultCountryCode as CountryCode}
                     name="phoneNo"
@@ -327,16 +350,17 @@ const CheckoutForm = (props: Props) => {
                     onFocus={onFocus}
                     onChange={handleChange}
                     onBlur={onBlur}
-                    className="inputClass"
+                    className="w-full px-4 py-3 bg-white/80 dark:bg-gray-700/80 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-[#25aae1] focus:ring-2 focus:ring-[#25aae1]/20 transition-all duration-300 text-gray-900 dark:text-white"
                   />
-                  <small className="form-error">
-                    {touched?.phoneNo && errors?.phoneNo}
-                  </small>
                 </div>
+                <small className="form-error text-red-500 text-sm">
+                  {touched?.phoneNo && errors?.phoneNo}
+                </small>
               </div>
 
-              <div className="flex mb-6">
-                <div className="flex items-center h-5">
+              {/* Terms Checkbox */}
+              <div className="flex items-start space-x-3 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+                <div className="flex items-center h-5 mt-1">
                   <input
                     id="terms"
                     name="terms"
@@ -345,213 +369,213 @@ const CheckoutForm = (props: Props) => {
                     onFocus={onFocus}
                     onChange={onChange}
                     onBlur={onBlur}
-                    className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                    className="w-5 h-5 text-[#25aae1] bg-white border-2 border-gray-300 rounded focus:ring-[#25aae1] focus:ring-2"
                   />
                 </div>
-                <div className="ms-2 text-sm">
+                <div className="text-sm">
                   <label
                     htmlFor="terms"
-                    className="font-medium text-blue-500  dark:text-blue-300 underline"
+                    className="font-medium text-gray-700 dark:text-gray-300"
                   >
-                    I accept the <Link to="/terms">terms and conditions</Link>
+                    I accept the{" "}
+                    <Link
+                      to="/terms"
+                      className="text-[#25aae1] hover:text-[#1e8fc5] underline font-semibold"
+                    >
+                      terms and conditions
+                    </Link>
                   </label>
-                  <p className="form-error">
+                  <p className="form-error text-red-500 text-sm mt-1">
                     {touched?.terms && errors?.terms}
                   </p>
                 </div>
               </div>
 
-              <div className="flex mb-6">
-                <div
-                  className="flex items-center h-5"
-                  style={{ display: "none" }}
-                >
-                  <input
-                    id="userConsent"
-                    name="userConsent"
-                    type="checkbox"
-                    checked={userConsent}
-                    onFocus={onFocus}
-                    onChange={onChange}
-                    onBlur={onBlur}
-                    className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 rounded focus:ring-red-600 dark:focus:ring-red-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                  />
-                </div>
-                {/* <div className="ms-2 text-sm">
-                  <label
-                    htmlFor="userConsent"
-                    className="font-medium text-white dark:text-gray-300"
-                  >
-                    Create account with above information.
-                  </label>
-                </div> */}
-              </div>
-              {/* <StripeCheckout
-       name = "MoTickets "
-       image = "https://moloyal.com/images/moticketsicon.png"
-      //  billingAddress
-      //  shippingAddress
-      currency={currencycode}
-      email={email}
-      description={`Your total amount is ${currency}${totalAmount}`}
-       amount={totalAmount*100}
-       token={onToken}
-      stripeKey={STRIPE_KEY}
-      > 
-       */}
+              {/* Submit Button */}
               <button
                 type="submit"
-                disabled={disabled}
-                className={`${
-                  disabled ? "disabled" : ""
-                } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
+                disabled={disabled || isLoading}
+                className={`w-full py-4 px-6 rounded-2xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 ${
+                  disabled || isLoading
+                    ? "bg-gray-400 cursor-not-allowed text-gray-200"
+                    : "bg-gradient-to-r from-[#25aae1] to-[#c10006] hover:from-[#1e8fc5] hover:to-[#a80005] hover:shadow-2xl hover:scale-105 text-white shadow-lg"
+                }`}
               >
-                Pay &nbsp;
-                <NumericFormat
-                  value={Number(totalAmount).toFixed(2)}
-                  displayType={"text"}
-                  thousandSeparator={true}
-                  prefix={`${currency}`}
-                />
+                {isLoading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                      />
+                    </svg>
+                    Pay Securely -{" "}
+                    <NumericFormat
+                      value={Number(totalAmount).toFixed(2)}
+                      displayType={"text"}
+                      thousandSeparator={true}
+                      prefix={`${currency}`}
+                    />
+                  </>
+                )}
               </button>
-              {/* </StripeCheckout> */}
             </form>
           </div>
-        </div>
 
-        <div className="mt-10 lg:mt-0">
-          <h2 className="text-lg font-medium text-white">Ticket summary</h2>
-          <div className="mt-4 rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="px-4 py-6 sm:px-6">
-              {/* <form>
-                <label
-                  htmlFor="discount"
-                  className="block font-medium text-sm text-black1"
+          {/* Right Column - Order Summary */}
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border border-white/20">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-10 h-10 bg-gradient-to-r from-[#c10006] to-[#a80005] rounded-full flex items-center justify-center">
+                <svg
+                  className="w-5 h-5 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  Discount code
-                </label>
-                <div className="mt-1 flex abj">
-                  <input
-                    type="text"
-                    id="discount"
-                    name="discount"
-                    value={discount}
-                    onChange={onDiscountChange}
-                    className="block w-full p-2.5 rounded-md border border-gray-300 shadow-sm sm:text-sm"
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
                   />
-                  <button
-                    type="button"
-                    onClick={onDiscountClick}
-                    disabled={discount?.length == 0}
-                    className={`${
-                      discount?.length == 0
-                        ? "bg-gray-200 text-gray-600 disabled"
-                        : "bg-red-600 text-white"
-                    } rounded-md px-4 text-sm font-medium bie bmz bne bnq bog bok`}
-                  >
-                    Apply
-                  </button>
-                </div>
-              </form> */}
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Order Summary
+              </h2>
             </div>
 
-            <dl className="aby border-t border-gray-200 px-4 py-6 sm:px-6">
+            {/* Tickets List */}
+            <div className="space-y-4 mb-6">
               {tickets.map((item, i) => (
-                <div className="flex items-center justify-between" key={i}>
-                  <dt className="text-base text-customBlack">{`${item?.qty} * ${item?.name}`}</dt>
-                  <dd className="text-base font-medium text-customBlack">
+                <div
+                  key={i}
+                  className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600"
+                >
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white">
+                      {item?.name}
+                    </div>
+                    <div className="text-sm text-gray-500 dark:text-gray-400">
+                      {item?.qty} x{" "}
+                      <NumericFormat
+                        value={Number(item.price).toFixed(2)}
+                        displayType={"text"}
+                        thousandSeparator={true}
+                        prefix={`${currency}`}
+                      />
+                    </div>
+                  </div>
+                  <div className="font-bold text-gray-900 dark:text-white">
                     <NumericFormat
                       value={Number(item.price * item.qty).toFixed(2)}
                       displayType={"text"}
                       thousandSeparator={true}
                       prefix={`${currency}`}
                     />
-                  </dd>
+                  </div>
                 </div>
               ))}
+            </div>
 
-              <div className="flex items-center justify-between">
-                <dt className="text-base text-customBlack">Subtotal</dt>
-                <dd className="text-base font-medium text-customBlack">
+            {/* Price Breakdown */}
+            <div className="space-y-3 border-t border-gray-200 dark:border-gray-600 pt-6">
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Subtotal</span>
+                <span>
                   <NumericFormat
                     value={Number(subTotal).toFixed(2)}
                     displayType={"text"}
                     thousandSeparator={true}
                     prefix={`${currency}`}
                   />
-                </dd>
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-base text-customBlack">Booking Fee</dt>
-                <dd className="text-base font-medium text-customBlack">
+
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Booking Fee</span>
+                <span>
                   <NumericFormat
                     value={Number(totalbookingFee).toFixed(2)}
                     displayType={"text"}
                     thousandSeparator={true}
                     prefix={`${currency}`}
                   />
-                </dd>
+                </span>
               </div>
-              <div className="flex items-center justify-between">
-                <dt className="text-base text-customBlack">
+
+              <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <span className="flex items-center gap-2">
                   VAT
-                  <span className="ml-2 rounded-lg bg-gray-200 px-2 py-1 text-xs tracking-wide text-gray-600">
+                  <span className="px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded-full text-xs">
                     {taxPercent}%
                   </span>
-                </dt>
-                <dd className="text-base font-medium text-customBlack">
+                </span>
+                <span>
                   <NumericFormat
                     value={Number(vat).toFixed(2)}
                     displayType={"text"}
                     thousandSeparator={true}
                     prefix={`${currency}`}
                   />
-                </dd>
+                </span>
               </div>
 
-              <div className="flex items-center justify-between border-t border-gray-200 pt-6">
-                <dt className="text-lg text-customBlack font-bold">Total</dt>
-                <dd className="text-base font-bold text-customBlack">
+              {/* Total */}
+              <div className="flex justify-between items-center pt-4 border-t border-gray-200 dark:border-gray-600">
+                <span className="text-lg font-bold text-gray-900 dark:text-white">
+                  Total
+                </span>
+                <span className="text-2xl font-black text-[#c10006]">
                   <NumericFormat
                     value={Number(totalAmount).toFixed(2)}
                     displayType={"text"}
                     thousandSeparator={true}
                     prefix={`${currency}`}
                   />
-                </dd>
+                </span>
               </div>
-            </dl>
-            <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
-              {/* <StripeCheckout
-       name = "MoTickets"
-       image = "https://moloyal.com/images/moticketsicon.png"
-      //  billingAddress
-      //  shippingAddress
-      currency={currencycode}
-      email={email}
-       description={`Your total amount is ${currency}${totalAmount}`}
-       amount={totalAmount*100}
-       token={onToken}
-      stripeKey={STRIPE_KEY}
-      >  */}
+            </div>
 
-              {/* <button
-                type="submit"
-                disabled={disabled}
-                className={`${
-                  disabled ? "disabled" : ""
-                } flex w-full items-center justify-center rounded-md border border-transparent bg-red-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-red-700`}
-              >
-                Pay &nbsp;
-                <NumericFormat
-                  value={Number(totalAmount).toFixed(2)}
-                  displayType={"text"}
-                  thousandSeparator={true}
-                  prefix={`${currency}`}
-                />
-              </button> */}
-
-              {/* </StripeCheckout> */}
+            {/* Security Badge */}
+            <div className="mt-8 p-4 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-4 h-4 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <div className="font-semibold text-green-800 dark:text-green-300">
+                    Secure Payment
+                  </div>
+                  <div className="text-sm text-green-600 dark:text-green-400">
+                    Your information is protected with 256-bit SSL encryption
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
