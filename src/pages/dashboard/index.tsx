@@ -211,7 +211,6 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-
               {/* Recent Events Section */}
               {events?.data && events.data.length > 0 && (
                 <div className="recent-events-section">
@@ -265,7 +264,10 @@ const Dashboard: React.FC = () => {
                     <div className="view-all-container">
                       <button
                         className="view-all-btn"
-                        onClick={() => setSelectedMenu("Event")}
+                        onClick={() => {
+                          setSelectedMenu("Event");
+                          setSelectedEventOption("MyEvent"); // This is the key change
+                        }}
                       >
                         View All Events ({events.data.length})
                       </button>
@@ -273,7 +275,6 @@ const Dashboard: React.FC = () => {
                   )}
                 </div>
               )}
-
               {/* Empty State */}
               {(!events?.data || events.data.length === 0) && (
                 <div className="empty-state">

@@ -11,12 +11,11 @@ import axios from "axios";
 import PhoneInput from "react-phone-number-input";
 import "react-phone-number-input/style.css";
 import { CountryCode, E164Number } from "libphonenumber-js";
-import { useParams } from "react-router-dom";
 import { validationSchema } from "./validation";
 import { NumericFormat } from "react-number-format";
 import { Link, useNavigate } from "react-router-dom";
 import { getCurrency, getCurrencyName } from "../../utils/functions";
-import usePost from "../../hooks/usePost";
+import PaystackPop from "@paystack/inline-js";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -48,7 +47,8 @@ const CheckoutForm = (props: Props) => {
   const defaultCountryCode = process.env.REACT_APP_COUNTRYCODE;
   const taxPercent = Number(process.env.REACT_APP_TAXPERCENT);
   const baseUrl = process.env.REACT_APP_BASEURL;
-  const STRIPE_KEY = process.env.REACT_APP_STRIPE_KEY;
+  const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
+
   const initialValues = {
     firstName: "",
     lastName: "",
@@ -68,33 +68,14 @@ const CheckoutForm = (props: Props) => {
     terms: false,
   });
   const [disabled, setDisabled] = useState(true);
-  const [discount, setDiscount] = useState("");
-  const [ticketDatas, setTicketDatas] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [discount, setDiscount] = useState("");
   const { firstName, lastName, email, phoneNo, userConsent, terms } = formData;
-  const [stripeToken, setStripeToken] = useState(null);
   const navigate = useNavigate();
 
   const currency = data && getCurrency(data);
   const currencyName = data && getCurrencyName(data);
-  const query = new URLSearchParams(window.location.search);
-
-  useEffect(() => {
-    const customId = "toastid";
-    if (query.get("success")) {
-      toast.success(
-        "🎉 Order placed! You will receive an email confirmation.",
-        {
-          toastId: customId,
-        }
-      );
-    }
-    if (query.get("canceled")) {
-      toast.error(
-        "❌ Order canceled -- continue to shop around and checkout when you're ready."
-      );
-    }
-  }, [query]);
+  const totalAmountInKobo = Math.round(Number(totalAmount) * 100);
 
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setFormData((prevState) => ({
@@ -132,6 +113,8 @@ const CheckoutForm = (props: Props) => {
     e.preventDefault();
     setIsLoading(true);
 
+    console.log("🔄 Starting Paystack payment process...");
+
     if (!terms) {
       toast.error("Please accept the terms and conditions");
       setIsLoading(false);
@@ -139,31 +122,103 @@ const CheckoutForm = (props: Props) => {
     }
 
     try {
-      const ticketData = {
-        firstName,
-        lastName,
+      const payload = {
+        key: paystackKey,
         email,
-        phoneNo,
-        userConsent,
-        terms,
-        discount,
-        currencyName,
-        vat,
-        tickets,
+        amount: totalAmountInKobo,
+        currency: currencyName || "NGN",
+        metadata: {
+          firstName,
+          lastName,
+          phoneNo,
+          userConsent,
+          tickets,
+          totalAmount,
+          subTotal,
+          totalbookingFee,
+          vat,
+        },
       };
 
-      setTicketDatas(ticketData);
-      const res = await axios.post(`${baseUrl}/checkout/stripe_session`, {
-        ticketData: ticketData,
-      });
+      console.log("📤 Payload being sent:", payload);
+      console.log(
+        "🔑 Paystack Key (first 10 chars):",
+        paystackKey?.substring(0, 10) + "..."
+      );
+      console.log("💰 Amount in kobo:", totalAmountInKobo);
+      console.log("📧 Customer email:", email);
 
-      window.location.href = res.data.url;
+      const apiResponse = await axios.post(
+        `${baseUrl}/paystack/initialise_transaction`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${paystackKey}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("✅ Paystack API Response:", apiResponse);
+
+      if (apiResponse.data.status === true) {
+        console.log(
+          "🎯 Access code received:",
+          apiResponse.data.data.access_code
+        );
+        const popup = new PaystackPop();
+
+        popup.resumeTransaction(apiResponse.data.data.access_code, {
+          onSuccess: (transaction) => {
+            console.log("💰 Payment successful:", transaction);
+            navigate("/success", {
+              state: {
+                tickets,
+                data,
+                totalAmount,
+                subTotal,
+                totalbookingFee,
+                vat,
+                reference: transaction.reference,
+                formData,
+              },
+            });
+          },
+          onLoad: (response) => {
+            console.log("📦 Paystack popup loaded:", response);
+          },
+          onCancel: () => {
+            console.log("❌ Payment cancelled by user");
+            toast.info("Payment was cancelled");
+            setIsLoading(false);
+          },
+          onError: (error) => {
+            console.log("🚨 Paystack error:", error);
+            console.log("📋 Error details:", error.message, error.stack);
+            toast.error(`Payment failed: ${error.message}`);
+            setIsLoading(false);
+          },
+        });
+      } else {
+        console.log("❌ Paystack returned false status:", apiResponse.data);
+        throw new Error(
+          apiResponse.data.message ||
+            "Failed to generate Paystack authorization URL"
+        );
+      }
     } catch (error) {
-      toast.error("❌ Something went wrong. Please try again.");
+      console.error("💥 Payment initiation failed:", error);
+      console.log("📋 Error response:", error.response?.data);
+      console.log("🔧 Error config:", error.config);
+
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Something went wrong. Please try again.";
+      toast.error(`Payment failed: ${errorMessage}`);
       setIsLoading(false);
     }
   };
-
   const validate = () => {
     validationSchema
       .validate(formData, { abortEarly: false })
@@ -186,7 +241,7 @@ const CheckoutForm = (props: Props) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#25aae1] to-[#c10006] bg-clip-text text-transparent mb-4">
+          <h1 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-[#25aae1] to-blue-800 bg-clip-text text-transparent mb-4">
             Secure Checkout
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-300">
@@ -391,6 +446,30 @@ const CheckoutForm = (props: Props) => {
                 </div>
               </div>
 
+              {/* User Consent Checkbox */}
+              <div className="flex items-start space-x-3 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600">
+                <div className="flex items-center h-5 mt-1">
+                  <input
+                    id="userConsent"
+                    name="userConsent"
+                    type="checkbox"
+                    checked={userConsent}
+                    onFocus={onFocus}
+                    onChange={onChange}
+                    onBlur={onBlur}
+                    className="w-5 h-5 text-[#25aae1] bg-white border-2 border-gray-300 rounded focus:ring-[#25aae1] focus:ring-2"
+                  />
+                </div>
+                <div className="text-sm">
+                  <label
+                    htmlFor="userConsent"
+                    className="font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Create account with above information.
+                  </label>
+                </div>
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -421,7 +500,7 @@ const CheckoutForm = (props: Props) => {
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
                       />
                     </svg>
-                    Pay Securely -{" "}
+                    Pay with Paystack -{" "}
                     <NumericFormat
                       value={Number(totalAmount).toFixed(2)}
                       displayType={"text"}
@@ -572,7 +651,8 @@ const CheckoutForm = (props: Props) => {
                     Secure Payment
                   </div>
                   <div className="text-sm text-green-600 dark:text-green-400">
-                    Your information is protected with 256-bit SSL encryption
+                    Powered by Paystack - Your information is protected with
+                    256-bit SSL encryption
                   </div>
                 </div>
               </div>

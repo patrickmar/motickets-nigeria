@@ -3,40 +3,15 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "../../assets/css/quill.css";
 import { QuillFormats } from "../../constant";
-// import moment from "moment";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
 import { customAlphabet } from "nanoid";
 
-// Add the function to convert file to base64
-// const getBase64 = (file: File) => {
-//   return new Promise<string>((resolve) => {
-//     let reader = new FileReader();
-//     reader.readAsDataURL(file);
-//     reader.onload = () => {
-//       const BaseUrl = reader.result as string;
-//       resolve(BaseUrl);
-//     };
-//   });
-// };
-
 interface User {
   id: string;
 }
-
-// Function to convert data URI to Blob
-// const dataURItoBlob4 = (dataURI: string) => {
-//   const binary = atob(dataURI.split(",")[1]);
-//   const array = [];
-//   for (let i = 0; i < binary.length; i++) {
-//     array.push(binary.charCodeAt(i));
-//   }
-//   return new Blob([new Uint8Array(array)], {
-//     type: "image/png",
-//   });
-// };
 
 interface TicketCategory {
   name: string;
@@ -98,17 +73,26 @@ interface EventData {
 
 const BaseUrl = `${process.env.REACT_APP_BASEURL}/host_create/eventticket`;
 
+// Image validation constants
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+];
+const MAX_IMAGE_DIMENSIONS = {
+  width: 5000, // Maximum width in pixels
+  height: 5000, // Maximum height in pixels
+};
+
 const CreateEventForm: React.FC = () => {
   const formats = QuillFormats;
   const [step, setStep] = useState<number>(1);
-  // const [startDate, setStartDate] = useState<string>("");
-  // const [endDate, setEndDate] = useState<string>("");
-  // const [selectedState, setSelectedState] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [showInformation, setShowInformation] = useState(false);
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
-  // const [formData, setFormData] = useState<FormData>(new FormData());
   const navigate = useNavigate();
 
   const user = useSelector(
@@ -153,6 +137,65 @@ const CreateEventForm: React.FC = () => {
     youtubeUrl: "",
   });
 
+  // Function to validate image file
+  const validateImageFile = (
+    file: File
+  ): { isValid: boolean; error?: string } => {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      return {
+        isValid: false,
+        error: `Image "${file.name}" is too large. Maximum size is 5MB.`,
+      };
+    }
+
+    // Check file type
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      return {
+        isValid: false,
+        error: `Invalid file type for "${file.name}". Only JPEG, PNG, and GIF images are allowed.`,
+      };
+    }
+
+    return { isValid: true };
+  };
+
+  // Function to check image dimensions
+  const checkImageDimensions = (
+    file: File
+  ): Promise<{ isValid: boolean; error?: string }> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+
+        if (
+          img.width > MAX_IMAGE_DIMENSIONS.width ||
+          img.height > MAX_IMAGE_DIMENSIONS.height
+        ) {
+          resolve({
+            isValid: false,
+            error: `Image "${file.name}" dimensions (${img.width}x${img.height}) are too large. Maximum allowed dimensions are ${MAX_IMAGE_DIMENSIONS.width}x${MAX_IMAGE_DIMENSIONS.height} pixels.`,
+          });
+        } else {
+          resolve({ isValid: true });
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({
+          isValid: false,
+          error: `Failed to load image "${file.name}" for dimension validation.`,
+        });
+      };
+
+      img.src = url;
+    });
+  };
+
   // Function to extract YouTube video ID from URL
   const extractYouTubeId = (url: string): string | null => {
     const regExp =
@@ -189,12 +232,6 @@ const CreateEventForm: React.FC = () => {
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // const handleImageClick = () => {
-  //   if (fileInputRef.current) {
-  //     fileInputRef.current.click();
-  //   }
-  // };
 
   const handleNextStep = () => {
     setStep(step + 1);
@@ -359,6 +396,7 @@ const CreateEventForm: React.FC = () => {
     const { value } = e.target;
     setEventData({ ...eventData, eventType: value });
   };
+
   // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string): Blob => {
     const byteString = atob(base64String.split(",")[1]);
@@ -370,18 +408,44 @@ const CreateEventForm: React.FC = () => {
     return new Blob([arrayBuffer], { type: "image/png" }); // Adjust the type accordingly
   };
 
-  const handleNewImageChange = (files: FileList | null) => {
-    if (files) {
-      const selectedImagesArray = Array.from(files);
-      if (selectedImagesArray.length + selectedImages.length > 5) {
-        toast.error(`Can't select more than five images`);
+  const handleNewImageChange = async (files: FileList | null) => {
+    if (!files) return;
+
+    const selectedImagesArray = Array.from(files);
+
+    // Check total number of images
+    if (selectedImagesArray.length + selectedImages.length > 5) {
+      toast.error(`Can't select more than five images`);
+      return;
+    }
+
+    // Validate each image
+    for (const file of selectedImagesArray) {
+      // Basic file validation
+      const fileValidation = validateImageFile(file);
+      if (!fileValidation.isValid) {
+        toast.error(fileValidation.error);
         return;
       }
-      setSelectedImages((prevImages) => [
-        ...prevImages,
-        ...selectedImagesArray,
-      ]);
+
+      // Dimension validation
+      try {
+        const dimensionValidation = await checkImageDimensions(file);
+        if (!dimensionValidation.isValid) {
+          toast.error(dimensionValidation.error);
+          return;
+        }
+      } catch (error) {
+        toast.error(`Error validating image "${file.name}"`);
+        console.error("Image validation error:", error);
+        return;
+      }
     }
+
+    // If all validations pass, add images to state
+    setSelectedImages((prevImages) => [...prevImages, ...selectedImagesArray]);
+
+    toast.success(`${selectedImagesArray.length} image(s) added successfully`);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -389,6 +453,11 @@ const CreateEventForm: React.FC = () => {
     setIsSubmitting(true);
 
     try {
+      // Final image validation before submission
+      if (selectedImages.length === 0) {
+        throw new Error("At least one event image is required");
+      }
+
       const formData = new FormData();
       formData.append("hostid", hostid);
 
@@ -487,10 +556,12 @@ const CreateEventForm: React.FC = () => {
     } catch (error: any) {
       console.error("[ERROR] Submission failed:", error);
       setSubmissionError(error.message || "Error creating event");
+      toast.error(error.message || "Error creating event");
     } finally {
       setIsSubmitting(false);
     }
   };
+
   const getBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -529,7 +600,7 @@ const CreateEventForm: React.FC = () => {
   }, [isAuthenticated, user, navigate]);
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center bg-[#04152d]">
       <div className="bg-gray-300/10 p-8 rounded shadow-lg w-4/5 lg:w-3/5 mt-24">
         <h2 className="text-2xl font-semibold mb-4 text-white">Create Event</h2>
         <form onSubmit={handleSubmit}>
@@ -577,8 +648,8 @@ const CreateEventForm: React.FC = () => {
                 </label>
                 <input
                   type="url"
-                  id="youtubeUrl" // This can stay as is for the ID
-                  name="youtubeUrl" // Make sure this matches your state property name
+                  id="youtubeUrl"
+                  name="youtubeUrl"
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
                   value={eventData.youtubeUrl}
                   onChange={handleYoutubeUrlChange}
@@ -626,7 +697,7 @@ const CreateEventForm: React.FC = () => {
                       type="file"
                       id="banner"
                       name="banner"
-                      accept="image/*"
+                      accept="image/jpeg,image/jpg,image/png,image/gif"
                       className="hidden"
                       onChange={(e) => handleNewImageChange(e.target.files)}
                       ref={fileInputRef}
@@ -641,6 +712,9 @@ const CreateEventForm: React.FC = () => {
                       i
                     </div>
                   </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Maximum file size: 5MB | Supported formats: JPEG, PNG, GIF
+                  </p>
                 </div>
                 <div className="mt-2 flex flex-wrap">
                   {selectedImages.map((banner, index) => (
@@ -670,6 +744,9 @@ const CreateEventForm: React.FC = () => {
                           />
                         </svg>
                       </button>
+                      <div className="text-xs mt-1 text-center">
+                        {(banner.size / 1024 / 1024).toFixed(2)}MB
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -681,12 +758,15 @@ const CreateEventForm: React.FC = () => {
                     Event graphics preferably include dimensions (220 by 330 px)
                     and (500 by 550 px) but any size provided may be resized to
                     fit. Supported formats are jpg, jpeg, png, gif.
+                    <br />
+                    <strong>Maximum file size: 5MB per image</strong>
                   </p>
                 </div>
               )}
             </>
           )}
 
+          {/* Rest of your component remains the same */}
           {step === 2 && (
             <>
               <div className="mb-4">
@@ -698,8 +778,8 @@ const CreateEventForm: React.FC = () => {
                   id="startDate"
                   name="startDate"
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-                  value={eventData.start[0].date} // Assuming you want to bind to the first element of the start array
-                  onChange={(e) => handleStartDateChange(e, 0)} // Pass index to handle function if needed
+                  value={eventData.start[0].date}
+                  onChange={(e) => handleStartDateChange(e, 0)}
                   required
                 />
               </div>
@@ -712,8 +792,8 @@ const CreateEventForm: React.FC = () => {
                   id="endDate"
                   name="endDate"
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-                  value={eventData.end[0].date} // Assuming you want to bind to the first element of the end array
-                  onChange={(e) => handleEndDateChange(e, 0)} // Pass index to handle function if needed
+                  value={eventData.end[0].date}
+                  onChange={(e) => handleEndDateChange(e, 0)}
                   required
                 />
               </div>
@@ -775,6 +855,7 @@ const CreateEventForm: React.FC = () => {
               </div>
             </>
           )}
+
           {step === 3 && (
             <>
               <div className="mb-4" data-name="description">
@@ -792,7 +873,7 @@ const CreateEventForm: React.FC = () => {
                   theme="snow"
                 />
                 <p className="text-xs text-gray-400">
-                  Give a full description. Not more than 3000 words
+                  Give a full description. Not more than 3000 characters
                 </p>
               </div>
               <div className="mb-4">
@@ -897,12 +978,6 @@ const CreateEventForm: React.FC = () => {
                       <th className="px-4 py-2">
                         Price ({currencySymbolMap[eventData.currency]})
                       </th>
-                      {/* <th className="px-4 py-2">
-                        Discount Price(
-                        {currencySymbolMap[eventData.currency]})
-                      </th> */}
-
-                      {/* <th className="px-4 py-2">Wallet Discount</th> */}
                       <th className="px-4 py-2">Qty</th>
                       <th className="px-4 py-2">Guest Per Unit</th>
                       <th className="px-4 py-2">Action</th>
@@ -939,34 +1014,6 @@ const CreateEventForm: React.FC = () => {
                             }
                           />
                         </td>
-                        {/* <td className="border px-4 py-2">
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-                            value={category.discountPrice}
-                            onChange={(e) =>
-                              handleCategoryChange(
-                                index,
-                                "discountPrice",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </td> */}
-                        {/* <td className="border px-4 py-2">
-                          <input
-                            type="text"
-                            className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-                            value={category.walletDiscount}
-                            onChange={(e) =>
-                              handleCategoryChange(
-                                index,
-                                "walletDiscount",
-                                e.target.value
-                              )
-                            }
-                          />
-                        </td> */}
                         <td className="border px-4 py-2">
                           <input
                             type="text"

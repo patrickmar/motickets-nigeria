@@ -79,7 +79,7 @@ const HeroBanner = (props: Props) => {
               <input
                 type="text"
                 value={query}
-                placeholder="Search for events, concerts, festivals, sports games, theater shows, conferences, workshops, parties, exhibitions, and much more..."
+                placeholder="Search for events, concerts, and much more..."
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyUp={searchQueryHandler}
                 onFocus={handleSearchFocus}
@@ -117,7 +117,7 @@ const HeroBanner = (props: Props) => {
             </div>
 
             {/* Search Suggestions - Clean and simple */}
-            {isSearchFocused && query.length === 0 && (
+            {/* {isSearchFocused && query.length === 0 && (
               <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-white/30 overflow-hidden animate-fade-in">
                 <div className="p-6">
                   <div className="text-sm text-gray-500 mb-3 font-medium text-center">
@@ -125,7 +125,7 @@ const HeroBanner = (props: Props) => {
                   </div>
                 </div>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Event Stats */}
@@ -133,7 +133,8 @@ const HeroBanner = (props: Props) => {
             <div className="mt-16 flex justify-center items-center gap-12 text-white/80">
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-white">
-                  {data.data.length}+
+                  {/* {data.data.length}+ */}
+                  10+
                 </div>
                 <div className="text-base md:text-lg">Live Events</div>
               </div>

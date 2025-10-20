@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from "react";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "../../assets/css/quill.css";
 import { QuillFormats } from "../../constant";
@@ -11,13 +10,10 @@ import { customAlphabet } from "nanoid";
 import { useGetHostEventByIdQuery } from "../../redux/api/eventApi";
 import { setUpdateStatus } from "../../features/eventSlice";
 import { Link } from "react-router-dom";
+import Editor from "react-simple-wysiwyg";
 
 interface User {
   id: string;
-}
-
-interface EventResponse {
-  data: Event[];
 }
 
 interface TicketCategory {
@@ -44,7 +40,6 @@ type CurrencySymbolMap = {
   USD: "$";
   NGN: "₦";
   EUR: "€";
-  // Add more currencies if needed
 };
 
 const currencySymbolMap: CurrencySymbolMap = {
@@ -52,7 +47,6 @@ const currencySymbolMap: CurrencySymbolMap = {
   USD: "$",
   NGN: "₦",
   EUR: "€",
-  // Add more currencies if needed
 };
 
 interface StartInfo {
@@ -63,8 +57,7 @@ interface StartInfo {
 interface EventData {
   eventTitle: string;
   venue: string;
-  selectedImages?: File[]; // Assuming this is a file array
-
+  selectedImages?: File[];
   startTime: string;
   endTime: string;
   startDate: string;
@@ -79,24 +72,20 @@ interface EventData {
   end: StartInfo[];
 }
 
-interface Event {
-  sn: string;
-  hostid: string;
-  title: string;
-  currency: string;
-  venue: string;
-  paystack_bearer: string;
-  event_cat: string;
-  des: string;
-  ticketCategories: TicketCategory[];
-  imgs: { img: string }[];
-  start: { date: string; time: string }[];
-  end: { date: string; time: string }[];
-  from_date: string;
-  from_time: string;
-  to_date: string;
-  to_time: string;
-}
+// Image validation constants with ACTUAL acceptable sizes
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+];
+// ACTUAL recommended dimensions for event images
+const RECOMMENDED_IMAGE_DIMENSIONS = {
+  primary: { width: 500, height: 550 }, // Main event banner
+  secondary: { width: 220, height: 330 }, // Thumbnail/listing image
+  max: { width: 5000, height: 5000 }, // Maximum allowed dimensions
+};
 
 const EditEventForm: React.FC = () => {
   const { sn } = useParams<{ sn: string }>();
@@ -108,7 +97,6 @@ const EditEventForm: React.FC = () => {
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
 
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const user = useSelector(
@@ -117,7 +105,7 @@ const EditEventForm: React.FC = () => {
   const hostid = user?.id || "";
 
   const { data: events } = useGetHostEventByIdQuery(user?.id!, {
-    skip: !user?.id, // Skip the query if user ID is not available
+    skip: !user?.id,
   });
 
   const [eventData, setEventData] = useState<EventData>({
@@ -155,6 +143,85 @@ const EditEventForm: React.FC = () => {
       },
     ],
   });
+
+  // Function to validate image file
+  const validateImageFile = (
+    file: File
+  ): { isValid: boolean; error?: string } => {
+    // Check file size
+    if (file.size > MAX_FILE_SIZE) {
+      return {
+        isValid: false,
+        error: `Image "${
+          file.name
+        }" is too large. Maximum size is 5MB. Your file is ${(
+          file.size /
+          1024 /
+          1024
+        ).toFixed(2)}MB.`,
+      };
+    }
+
+    // Check file type
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      return {
+        isValid: false,
+        error: `Invalid file type for "${file.name}". Only JPEG, PNG, and GIF images are allowed.`,
+      };
+    }
+
+    return { isValid: true };
+  };
+
+  // Function to check image dimensions and provide specific recommendations
+  const checkImageDimensions = (
+    file: File
+  ): Promise<{
+    isValid: boolean;
+    error?: string;
+    dimensions?: { width: number; height: number };
+  }> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const dimensions = { width: img.width, height: img.height };
+
+        if (
+          img.width > RECOMMENDED_IMAGE_DIMENSIONS.max.width ||
+          img.height > RECOMMENDED_IMAGE_DIMENSIONS.max.height
+        ) {
+          resolve({
+            isValid: false,
+            error: `Image "${file.name}" dimensions (${img.width}x${img.height}) are too large. Maximum allowed dimensions are ${RECOMMENDED_IMAGE_DIMENSIONS.max.width}x${RECOMMENDED_IMAGE_DIMENSIONS.max.height} pixels.`,
+            dimensions,
+          });
+        } else {
+          resolve({
+            isValid: true,
+            dimensions,
+            error:
+              img.width < RECOMMENDED_IMAGE_DIMENSIONS.primary.width ||
+              img.height < RECOMMENDED_IMAGE_DIMENSIONS.primary.height
+                ? `Note: For best quality, use images at least ${RECOMMENDED_IMAGE_DIMENSIONS.primary.width}x${RECOMMENDED_IMAGE_DIMENSIONS.primary.height} pixels.`
+                : undefined,
+          });
+        }
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        resolve({
+          isValid: false,
+          error: `Failed to load image "${file.name}" for dimension validation.`,
+        });
+      };
+
+      img.src = url;
+    });
+  };
 
   useEffect(() => {
     if (events && events.data) {
@@ -216,8 +283,11 @@ const EditEventForm: React.FC = () => {
     setStep(step - 1);
   };
 
-  const handleDescriptionChange = (description: string) => {
-    setEventData({ ...eventData, description });
+  const handleDescriptionChange = (e: { target: { value: string } }) => {
+    setEventData((prev) => ({
+      ...prev,
+      description: e.target.value,
+    }));
   };
 
   const handleAddCategory = () => {
@@ -321,6 +391,7 @@ const EditEventForm: React.FC = () => {
     const { value } = e.target;
     setEventData({ ...eventData, eventType: value });
   };
+
   // Function to convert base64 string to Blob
   const base64ToBlob = (base64String: string): Blob => {
     const byteString = atob(base64String.split(",")[1]);
@@ -329,19 +400,48 @@ const EditEventForm: React.FC = () => {
     for (let i = 0; i < byteString.length; i++) {
       uint8Array[i] = byteString.charCodeAt(i);
     }
-    return new Blob([arrayBuffer], { type: "image/png" }); // Adjust the type accordingly
+    return new Blob([arrayBuffer], { type: "image/png" });
   };
 
-  const handleNewImageChange = (files: FileList | null) => {
-    if (files) {
-      const selectedImagesArray = Array.from(files);
-      if (selectedImagesArray.length > 5) {
-        toast.error(`Can't select more than five images`);
+  const handleNewImageChange = async (files: FileList | null) => {
+    if (!files) return;
+
+    const selectedImagesArray = Array.from(files);
+
+    // Check total number of images
+    if (selectedImagesArray.length > 5) {
+      toast.error(`Can't select more than five images`);
+      return;
+    }
+
+    // Validate each image
+    for (const file of selectedImagesArray) {
+      // Basic file validation
+      const fileValidation = validateImageFile(file);
+      if (!fileValidation.isValid) {
+        toast.error(fileValidation.error);
         return;
       }
-      setSelectedImages(selectedImagesArray);
-      setExistingImages([]);
+
+      // Dimension validation
+      try {
+        const dimensionValidation = await checkImageDimensions(file);
+        if (!dimensionValidation.isValid) {
+          toast.error(dimensionValidation.error);
+          return;
+        }
+      } catch (error) {
+        toast.error(`Error validating image "${file.name}"`);
+        console.error("Image validation error:", error);
+        return;
+      }
     }
+
+    // If all validations pass, add images to state
+    setSelectedImages(selectedImagesArray);
+    setExistingImages([]);
+
+    toast.success(`${selectedImagesArray.length} image(s) added successfully`);
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -350,11 +450,23 @@ const EditEventForm: React.FC = () => {
     setSubmissionError("");
 
     try {
+      // Final image validation before submission
+      if (selectedImages.length === 0 && existingImages.length === 0) {
+        throw new Error("At least one event image is required");
+      }
+
       const formData = new FormData();
       formData.append("hostid", hostid);
 
-      Object.entries(eventData).forEach(([key, value]) => {
-        if (key === "ticketCategories") {
+      const sanitizedEventData = {
+        ...eventData,
+        description: eventData.description
+          .replace(/'/g, "\\'")
+          .replace(/"/g, '\\"'),
+      };
+
+      Object.entries(sanitizedEventData).forEach(([key, value]) => {
+        if (key === "ticketCategories" && Array.isArray(value)) {
           value.forEach((category: any, index: number) => {
             Object.entries(category).forEach(([subKey, subValue]) => {
               formData.append(
@@ -400,6 +512,7 @@ const EditEventForm: React.FC = () => {
           logObject[key] = value;
         }
       });
+      console.log(logObject);
 
       const response = await fetch(
         `${process.env.REACT_APP_BASEURL}/update/eventticket/${sn}`,
@@ -418,14 +531,14 @@ const EditEventForm: React.FC = () => {
 
       if (data.error === false) {
         toast.success(data.message);
-        dispatch(setUpdateStatus(true)); // Dispatch the action to update status
-        // navigate("/dashboard");
+        dispatch(setUpdateStatus(true));
         setIsSubmitting(true);
       } else {
         throw new Error(data.message || "Unknown error");
       }
     } catch (error: any) {
       setSubmissionError(error.message || "Error creating event");
+      toast.error(error.message || "Error updating event");
     } finally {
       setIsSubmitting(false);
     }
@@ -451,7 +564,7 @@ const EditEventForm: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center">
+    <div className="flex items-center justify-center bg-[#04152d]">
       <div className="bg-gray-300/10 p-8 rounded shadow-lg w-4/5 lg:w-3/5 mt-24">
         <h2 className="text-2xl font-semibold mb-4 text-white">Update Event</h2>
         <form onSubmit={handleSubmit}>
@@ -483,7 +596,6 @@ const EditEventForm: React.FC = () => {
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
                   value={eventData.venue}
                   onChange={handleChange}
-                  // placeholder="London, England"
                 />
               </div>
               <div className="mb-4">
@@ -496,18 +608,17 @@ const EditEventForm: React.FC = () => {
                       htmlFor="banner"
                       className="cursor-pointer bg-[#25aae1] text-white px-4 py-2 rounded-md mr-2 focus:outline-none"
                     >
-                      Add Event Image
+                      Replace Image
                     </label>
                     <input
                       type="file"
                       id="banner"
                       name="banner"
-                      accept="image/*"
+                      accept="image/jpeg,image/jpg,image/png,image/gif"
                       className="hidden"
                       onChange={(e) => handleNewImageChange(e.target.files)}
                       ref={fileInputRef}
                       multiple
-                      required
                     />
                     <div
                       className="cursor-pointer bg-gray-300 text-gray-600 rounded-full flex items-center justify-center w-6 h-6 text-sm lg:w-8 lg:h-8 lg:text-base"
@@ -517,6 +628,9 @@ const EditEventForm: React.FC = () => {
                       i
                     </div>
                   </div>
+                  <p className="text-sm text-gray-500 mt-2">
+                    Maximum file size: 5MB | Supported formats: JPEG, PNG, GIF
+                  </p>
                 </div>
                 <div className="mt-2 flex flex-wrap">
                   {existingImages.map((image, index) => (
@@ -575,24 +689,37 @@ const EditEventForm: React.FC = () => {
                           />
                         </svg>
                       </button>
+                      <div className="text-xs mt-1 text-center">
+                        {(image.size / 1024 / 1024).toFixed(2)}MB
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* Add information tooltip or modal */}
               {showInformation && (
                 <div className="bg-white p-4 border rounded-md">
-                  <p className=" italic text-blue-400">
+                  <p className="italic text-blue-400">
                     Event graphics preferably include dimensions (220 by 330 px)
                     and (500 by 550 px) but any size provided may be resized to
                     fit. Supported formats are jpg, jpeg, png, gif.
+                    <br />
+                    <strong>Maximum file size: 5MB per image</strong>
+                    <br />
+                    <strong>Recommended dimensions:</strong>
+                    <br />• Primary:{" "}
+                    {RECOMMENDED_IMAGE_DIMENSIONS.primary.width} ×{" "}
+                    {RECOMMENDED_IMAGE_DIMENSIONS.primary.height}px
+                    <br />• Secondary:{" "}
+                    {RECOMMENDED_IMAGE_DIMENSIONS.secondary.width} ×{" "}
+                    {RECOMMENDED_IMAGE_DIMENSIONS.secondary.height}px
                   </p>
                 </div>
               )}
             </>
           )}
 
+          {/* Rest of the component remains the same */}
           {step === 2 && (
             <>
               <div className="mb-4">
@@ -604,8 +731,8 @@ const EditEventForm: React.FC = () => {
                   id="startDate"
                   name="startDate"
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-                  value={eventData.start[0].date} // Assuming you want to bind to the first element of the start array
-                  onChange={(e) => handleStartDateChange(e, 0)} // Pass index to handle function if needed
+                  value={eventData.start[0].date}
+                  onChange={(e) => handleStartDateChange(e, 0)}
                   required
                 />
               </div>
@@ -618,8 +745,8 @@ const EditEventForm: React.FC = () => {
                   id="endDate"
                   name="endDate"
                   className="w-full px-4 py-2 border rounded-md focus:outline-none focus:border-blue-500"
-                  value={eventData.end[0].date} // Assuming you want to bind to the first element of the end array
-                  onChange={(e) => handleEndDateChange(e, 0)} // Pass index to handle function if needed
+                  value={eventData.end[0].date}
+                  onChange={(e) => handleEndDateChange(e, 0)}
                   required
                 />
               </div>
@@ -690,15 +817,20 @@ const EditEventForm: React.FC = () => {
                 >
                   Description
                 </label>
-                <ReactQuill
-                  formats={formats}
-                  value={eventData.description}
+                <Editor
+                  value={eventData.description || ""}
                   onChange={handleDescriptionChange}
-                  className="add-new-post__editor mb-1 text-black"
-                  theme="snow"
+                  containerProps={{
+                    className:
+                      "add-new-post__editor mb-1 text-gray-900 bg-gray-50",
+                    style: {
+                      height: "400px",
+                      width: "800px",
+                    },
+                  }}
                 />
                 <p className="text-xs text-gray-400">
-                  Give a full description. Not more than 3000 words
+                  Give a full description. Not more than 3000 characters
                 </p>
               </div>
               <div className="mb-4">

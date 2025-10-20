@@ -2,16 +2,14 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useNavigate } from "react-router-dom";
-import {
-  useDeleteEventMutation,
-  useGetHostEventByIdQuery,
-} from "../../redux/api/eventApi";
+import { useGetHostEventByIdQuery } from "../../redux/api/eventApi";
 import f10 from "../../assets/images/f10.png";
 import toast from "react-hot-toast";
 import { setUpdateStatus } from "../../features/eventSlice";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { useDropzone } from "react-dropzone";
+import { customAlphabet } from "nanoid";
 
 interface Event {
   sn: string;
@@ -24,15 +22,10 @@ interface Event {
   ticketCategories: { price: string }[];
 }
 
-interface EventResponse {
-  data: Event[];
-}
-
 interface User {
   id: string;
 }
 
-// First, add this interface at the top of your file
 interface EmailApiResponse {
   status: boolean;
   message: string;
@@ -127,6 +120,8 @@ const MyEvent: React.FC = () => {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
+  const nanoid = customAlphabet("123456789", 11);
+
   const handleAddImages = async (eventid: string) => {
     if (files.length === 0) {
       toast.error("Please select at least one image to upload");
@@ -140,12 +135,24 @@ const MyEvent: React.FC = () => {
       formData.append("eventid", eventid);
       formData.append("hostid", user?.id || "");
 
-      files.forEach((file, index) => {
-        formData.append(`images`, file);
-      });
+      // Process images with nanoid naming
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const elevenDigitName = nanoid();
+        const fileExtension = file.name.split(".").pop();
+        const banner = new File([file], `${elevenDigitName}.${fileExtension}`, {
+          type: file.type,
+          lastModified: file.lastModified,
+        });
+        formData.append("banner[]", banner);
+      }
+
+      console.log("FormData contents:");
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value instanceof File ? value.name : value);
+      }
 
       const response = await fetch(
-        // "https://moloyal.com/mosave_ukdemo/script/api/eventhost/addpics",
         `${process.env.REACT_APP_BASEURL}/eventhost/addpics`,
         {
           method: "POST",
@@ -153,14 +160,20 @@ const MyEvent: React.FC = () => {
         }
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to upload images");
+      const responseText = await response.text();
+      let result;
+      try {
+        result = JSON.parse(responseText);
+      } catch (e) {
+        result = { message: responseText };
       }
 
-      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.message || "Failed to upload images");
+      }
 
-      if (result.status) {
-        toast.success("Images uploaded successfully!");
+      if (result.status || response.ok) {
+        toast.success(result.message || "Images uploaded successfully!");
         setIsImageModalOpen(false);
         setFiles([]);
         dispatch(setUpdateStatus((prev: boolean) => !prev));
@@ -177,7 +190,6 @@ const MyEvent: React.FC = () => {
     }
   };
 
-  // Then update the handleSendEmail function in your component
   const handleSendEmail = async () => {
     if (!selectedEvent) return;
 
@@ -194,16 +206,13 @@ const MyEvent: React.FC = () => {
     setIsSending(true);
 
     try {
-      // Prepare the request body
       const requestBody = {
         eventid: selectedEvent.sn,
         subject: emailData.subject,
-        content: emailData.message, // Using just the message without event details
+        content: emailData.message,
       };
 
-      // Make the API call
       const response = await fetch(
-        // "https://moloyal.com/mosave_ukdemo/script/api/host/email_customer",
         `${process.env.REACT_APP_BASEURL}/host/email_customer`,
         {
           method: "POST",
@@ -214,12 +223,10 @@ const MyEvent: React.FC = () => {
         }
       );
 
-      // First check if response is OK (status 200-299)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Try to parse JSON, but handle cases where response might be empty
       let data;
       const text = await response.text();
       try {
@@ -229,7 +236,6 @@ const MyEvent: React.FC = () => {
         data = {};
       }
 
-      // If we got here, the request was successful
       toast.success("Email sent successfully!");
       setIsEmailModalOpen(false);
       setEmailData({
@@ -247,6 +253,7 @@ const MyEvent: React.FC = () => {
       setIsSending(false);
     }
   };
+
   const getPriceRange = (ticketCategories: { price: string }[]) => {
     const prices = ticketCategories.map((tc) => parseFloat(tc.price));
     const minPrice = Math.min(...prices);
@@ -254,7 +261,6 @@ const MyEvent: React.FC = () => {
     return { minPrice, maxPrice };
   };
 
-  // Quill editor configuration
   const quillModules = {
     toolbar: [
       [{ header: [1, 2, 3, false] }],
@@ -277,10 +283,9 @@ const MyEvent: React.FC = () => {
   ];
 
   const eventList: Event[] = events?.data || [];
-  console.log(selectedEvent);
 
   return (
-    <div className="container mx-auto">
+    <div className="container mx-auto px-4">
       {/* Enhanced Email Modal */}
       {isEmailModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -609,10 +614,13 @@ const MyEvent: React.FC = () => {
         {eventList.map((event: Event) => {
           const { minPrice, maxPrice } = getPriceRange(event.ticketCategories);
           return (
-            <div key={event.sn} className="w-full sm:w-1/2 md:w-1/3 px-2 mb-4">
-              <div className="bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 flex flex-col h-full">
+            <div
+              key={event.sn}
+              className="w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 px-2 mb-4"
+            >
+              <div className="bg-white border shadow-sm rounded-xl dark:bg-neutral-900 dark:border-neutral-700 dark:shadow-neutral-700/70 flex flex-col h-full hover:shadow-lg transition-shadow duration-300">
                 <img
-                  className="w-full h-64 object-cover rounded-t-xl"
+                  className="w-full h-48 sm:h-56 md:h-64 object-cover rounded-t-xl"
                   src={
                     event.imgs[0]?.img
                       ? `${process.env.REACT_APP_IMAGEURL}/${event.imgs[0]?.img}`
@@ -624,53 +632,144 @@ const MyEvent: React.FC = () => {
                   }}
                 />
                 <div className="p-4 md:p-5 flex flex-col flex-grow">
-                  <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                  <h3 className="text-lg font-bold text-gray-800 dark:text-white line-clamp-2 mb-2 text-center">
                     {event.title}
                   </h3>
-                  <p className="mt-1 text-gray-500 dark:text-neutral-400">
+                  <p className="text-gray-500 dark:text-neutral-400 mb-2 text-center">
                     {event.currency}{" "}
                     {minPrice === maxPrice
                       ? minPrice
                       : `${minPrice} - ${maxPrice}`}
                   </p>
-                  <p className="mt-5 text-xs text-gray-500 dark:text-neutral-500">
+                  <p className="text-xs text-gray-500 dark:text-neutral-500 mb-4 text-center">
                     {event.date}
                   </p>
-                  <div className="mt-auto flex justify-end space-x-2">
-                    <button
-                      onClick={() => navigate(`/details/${event.slug}`)}
-                      className="bg-[#25aae1] text-white px-3 py-1 rounded hover:bg-[#1a8abf]"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={() => navigate(`/update-event/${event.sn}`)}
-                      className="text-white bg-[#0A0D36] py-1.5 px-4"
-                    >
-                      Edit
-                    </button>
-                    {/* Add Images Button */}
-                    <button
-                      onClick={() => {
-                        setSelectedEvent(event);
-                        setIsImageModalOpen(true);
-                      }}
-                      className="bg-purple-500 text-white px-3 py-1 rounded hover:bg-purple-600"
-                    >
-                      Add Images
-                    </button>
-                    <button
-                      onClick={() => handleEmailButtonClick(event)}
-                      className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600"
-                    >
-                      Email
-                    </button>
-                    <button
-                      onClick={() => deleteEventHandler(event.sn)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      Delete
-                    </button>
+
+                  {/* Centered Responsive Button Container */}
+                  <div className="mt-auto flex justify-center">
+                    {/* Mobile: Vertical Stack - Centered */}
+                    <div className="flex flex-col space-y-2 w-full max-w-xs sm:hidden">
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => navigate(`/details/${event.slug}`)}
+                          className="bg-[#25aae1] text-white px-2 py-2 rounded hover:bg-[#1a8abf] text-sm font-medium transition-colors duration-200"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => navigate(`/update-event/${event.sn}`)}
+                          className="bg-[#0A0D36] text-white px-2 py-2 rounded hover:bg-[#070920] text-sm font-medium transition-colors duration-200"
+                        >
+                          Edit Event
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setIsImageModalOpen(true);
+                          }}
+                          className="bg-purple-500 text-white px-2 py-2 rounded hover:bg-purple-600 text-sm font-medium transition-colors duration-200"
+                        >
+                          Images
+                        </button>
+                        <button
+                          onClick={() => handleEmailButtonClick(event)}
+                          className="bg-green-500 text-white px-2 py-2 rounded hover:bg-green-600 text-sm font-medium transition-colors duration-200"
+                        >
+                          Email
+                        </button>
+                      </div>
+                      <button
+                        onClick={() => deleteEventHandler(event.sn)}
+                        className="bg-red-500 text-white px-2 py-2 rounded hover:bg-red-600 text-sm font-medium transition-colors duration-200 w-full"
+                      >
+                        Delete
+                      </button>
+                    </div>
+
+                    {/* Tablet: Compact Grid - Centered */}
+                    <div className="hidden sm:flex md:hidden flex-col space-y-2 w-full max-w-sm">
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => navigate(`/details/${event.slug}`)}
+                          className="bg-[#25aae1] text-white px-2 py-2 rounded hover:bg-[#1a8abf] text-xs font-medium transition-colors duration-200"
+                        >
+                          View
+                        </button>
+                        <button
+                          onClick={() => navigate(`/update-event/${event.sn}`)}
+                          className="bg-[#0A0D36] text-white px-2 py-2 rounded hover:bg-[#070920] text-xs font-medium transition-colors duration-200"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setIsImageModalOpen(true);
+                          }}
+                          className="bg-purple-500 text-white px-2 py-2 rounded hover:bg-purple-600 text-xs font-medium transition-colors duration-200"
+                        >
+                          Images
+                        </button>
+                      </div>
+                      <div className="flex justify-center space-x-2">
+                        <button
+                          onClick={() => handleEmailButtonClick(event)}
+                          className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 text-xs font-medium transition-colors duration-200 flex-1 max-w-[100px]"
+                        >
+                          Email
+                        </button>
+                        <button
+                          onClick={() => deleteEventHandler(event.sn)}
+                          className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 text-xs font-medium transition-colors duration-200 flex-1 max-w-[100px]"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Desktop: Horizontal Layout - Centered */}
+                    <div className="hidden md:flex flex-wrap gap-2 justify-center w-full">
+                      <button
+                        onClick={() => navigate(`/details/${event.slug}`)}
+                        className="bg-[#25aae1] text-white px-3 py-2 rounded hover:bg-[#1a8abf] text-sm font-medium transition-colors duration-200 flex items-center justify-center min-w-[60px]"
+                        title="View Event"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => navigate(`/update-event/${event.sn}`)}
+                        className="bg-[#0A0D36] text-white px-3 py-2 rounded hover:bg-[#070920] text-sm font-medium transition-colors duration-200 flex items-center justify-center min-w-[60px]"
+                        title="Edit Event"
+                      >
+                        Edit Event
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setIsImageModalOpen(true);
+                        }}
+                        className="bg-purple-500 text-white px-3 py-2 rounded hover:bg-purple-600 text-sm font-medium transition-colors duration-200 flex items-center justify-center min-w-[70px]"
+                        title="Add Images"
+                      >
+                        Add Images
+                      </button>
+                      <button
+                        onClick={() => handleEmailButtonClick(event)}
+                        className="bg-green-500 text-white px-3 py-2 rounded hover:bg-green-600 text-sm font-medium transition-colors duration-200 flex items-center justify-center min-w-[60px]"
+                        title="Email Attendees"
+                      >
+                        Email
+                      </button>
+                      <button
+                        onClick={() => deleteEventHandler(event.sn)}
+                        className="bg-red-500 text-white px-3 py-2 rounded hover:bg-red-600 text-sm font-medium transition-colors duration-200 flex items-center justify-center min-w-[70px]"
+                        title="Delete Event"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
