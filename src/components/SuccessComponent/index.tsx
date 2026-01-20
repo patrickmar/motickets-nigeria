@@ -6,7 +6,6 @@ import { getCurrency } from "../../utils/functions";
 import "./styles.scss";
 import ContentWrapper from "../ContentWrapper";
 import { toast } from "react-toastify";
-import { object } from "yup";
 
 interface Ticket {
   qty: number;
@@ -14,183 +13,123 @@ interface Ticket {
   price: number;
 }
 
-interface PaystackData {
-  email: string;
-  amount: number;
-  reference: string;
-}
-
-// interface PaymentData {
-//   subTotal: number;
-//   totalbookingFee: number;
-//   vat: number;
-//   totalAmount: number;
-// }
-
 interface Props {
   tickets: Array<any>;
   formData: Array<any>;
-  
- 
   totalAmount: number;
-   subTotal: number;
+  subTotal: number;
   totalbookingFee: number;
   vat: number;
   data: any;
   reference: number;
-  payValidated:any
+  payValidated: any;
 }
 
 const paystackKey = process.env.REACT_APP_PAYSTACK_KEY;
 
-
-
 const SuccessComponent = (props: Props) => {
-  const { tickets, data, totalAmount, subTotal, totalbookingFee, vat, reference, formData, payValidated } = props;
- 
+  const {
+    tickets,
+    data,
+    totalAmount,
+    subTotal,
+    totalbookingFee,
+    vat,
+    reference,
+    formData,
+    payValidated,
+  } = props;
+
   const location = useLocation();
   const baseUrl = process.env.REACT_APP_BASEURL;
   const navigate = useNavigate();
   const currency = getCurrency(data);
-  
- // const [check, setCheck] = useState(true);
-  const [tick, setTick]= useState(tickets);
+
+  const [tick, setTick] = useState(tickets);
   const [validatePay, setValidatePay] = useState(payValidated);
-  const [loading, setLoading] = useState(false);
-  const [payres, setPayres] = useState({});
+  const [loading, setLoading] = useState(true); // Start with loading true
+  const [payres, setPayres] = useState<any>({});
 
-  // const query = new URLSearchParams(window.location.search);
-  // const reference = query.get("reference");
+  // Prepare merged data for dispense
+  const newJson = {
+    vat: vat,
+    totalbookingFee: totalbookingFee,
+    subTotal: subTotal,
+    totalAmount: totalAmount,
+  };
+  const mergedData = { ...data, ...formData, ...newJson };
 
- // const reference = new URLSearchParams(location.search).get("reference");
-// const newJson={
-//  vat: vat,
-//         totalbookingFee:totalbookingFee,
-//         subTotal:subTotal,
-//         totalAmount: totalAmount 
-      
-//       }
-//  const mergedData={...data, ...formData,...newJson};
- 
-//  console.log("userdata ", mergedData);
- //console.log("ticket ", tickets);
- //console.log("ref ", reference);
- //console.log("check ", validatePay);
- 
-  // useEffect(() => {
+  const verifyPayment = useCallback(async () => {
+    if (!reference) {
+      toast.error("No payment reference found");
+      setLoading(false);
+      return;
+    }
 
-    
-  
-  //   const verifyPayment = async () => {
-  //     try {
-  //       await axios.get(
-  //         `${baseUrl}/paystack/verify_transaction/${reference}`,
-          
-  //       ).then(res => {
-  //         let status= res.data.paystackresp.status;
-  //         console.log('tick',tick);
-  //         if ( status === true) {
-  //           setPayres(res.data);
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${baseUrl}/paystack/verify_transaction/${reference}`,
+      );
 
-  //        try{
-  //           toast.success("Payment successful!");
-           
-  //             axios.post(`${baseUrl}/dispense/paystack_ticket`, {
-  //             userdata: mergedData,
-              
-  //             myCart: tick,
-  //             paystackData: res.data.paystackresp.data,
-  //           }).then(resDispense => {
-  //             console.log("Ticket Response:", resDispense);
-  //             if (resDispense.data.error === false) {
-  //                     setValidatePay(true);
-                     
-                      
-  //                     resetState();
-  //                   } else {
-  //                     console.log("Ticket dispensing failed. Please contact support.");
-  //                   }
-            
-  //           });
-      
-          
-          
-  //           // if (resDispense.data.error === false) {
-  //           //   setValidatePay(true);
-  //           // } else {
-  //           //   console.log("Ticket dispensing failed. Please contact support.");
-  //           // }
-  //         } catch (error) {
-  //           console.error("Ticket processing error:", error);
-  //         } finally {
-  //           setLoading(false);
-  //         }
-        
-  //         // dispenseTickets(); // Call ticket dispensing function
-  
-  //          // navigate("/success");
-  //         } else {
-  //            toast.error("Payment verification failed.");
-  //           // navigate("/checkout");
-  //         }
-  //         }).catch(error => {
-  //        console.log(error);
-  //         });
-  //       console.log(reference);
-        
-       
-       
-  //     } catch (error) {
-  //       console.error("Error verifying payment:", error);
-  //       toast.error("An error occurred during payment verification.");
-  //      // navigate("/checkout");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
+      const paystackData = response.data.paystackresp;
 
-    
-  //   verifyPayment();
-  // }, []);
- // console.log(payres);
- 
+      if (
+        paystackData.status === true &&
+        paystackData.data.status === "success"
+      ) {
+        setPayres(paystackData.data);
 
-  // const resetState = () => {
-  //   setTick([]);
-   
-   
-  // };
- // const dispenseTickets = async () => {
-  //   try {
-  //     //console.log("ticketData ", ticketData);
-  //     console.log("userdata ", mergedData);
-  //     console.log("ticket ", tickets);
-  //     console.log(payres);
-     // console.log(ticketData);
-  //     const res = await axios.post(`${baseUrl}/dispense/paystack_ticket`, {
-  //       userdata: mergedData,
-        
-  //       myCart: tickets,
-  //       paystackData: payres,
-  //     });
+        // Dispense tickets
+        try {
+          const dispenseResponse = await axios.post(
+            `${baseUrl}/dispense/paystack_ticket`,
+            {
+              userdata: mergedData,
+              myCart: tick,
+              paystackData: paystackData.data,
+            },
+          );
 
-  //     console.log("Ticket Response:", res);
+          if (dispenseResponse.data.error === false) {
+            setValidatePay(true);
+            toast.success("Payment successful! Tickets have been issued.");
+          } else {
+            toast.error("Ticket dispensing failed. Please contact support.");
+            console.error("Dispense error:", dispenseResponse.data);
+          }
+        } catch (dispenseError) {
+          console.error("Ticket dispensing error:", dispenseError);
+          toast.error("Error processing tickets. Contact support.");
+        }
+      } else {
+        toast.error(
+          "Payment verification failed or payment was not successful.",
+        );
+        setValidatePay(false);
+      }
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      toast.error("An error occurred during payment verification.");
+      setValidatePay(false);
+    } finally {
+      setLoading(false);
+    }
+  }, [reference, baseUrl, mergedData, tick]);
 
-  //     if (res.data.error === false) {
-  //       setValidatePay(true);
-  //     } else {
-  //       console.log("Ticket dispensing failed. Please contact support.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Ticket processing error:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  useEffect(() => {
+    // Only verify payment if not already validated
+    if (!validatePay && reference) {
+      verifyPayment();
+    } else if (!reference) {
+      setLoading(false);
+      setValidatePay(false);
+    }
+  }, [validatePay, reference, verifyPayment]);
 
-  // useEffect(() => {
-  //   verifyPayment();
-  // }, [verifyPayment]);
+  const resetState = () => {
+    setTick([]);
+  };
 
   return (
     <div className="detailsBanner">
@@ -199,9 +138,10 @@ const SuccessComponent = (props: Props) => {
           {!validatePay ? (
             <>
               <span className="text-black">
-                The payment is invalid! Please contact admin.
+                The payment is invalid or could not be verified! Please contact
+                admin.
               </span>
-              <br/>
+              <br />
               <button
                 onClick={() => navigate("/")}
                 className="mt-5 px-6 py-3 bg-red-600 text-white font-medium rounded-md hover:bg-red-700"
@@ -210,25 +150,24 @@ const SuccessComponent = (props: Props) => {
               </button>
             </>
           ) : (
-            <div>
-              <span className="text-black">
-                The tickets have been purchased successfully.
+            <div className="flex flex-col items-center">
+              <span className="text-black text-xl font-bold mb-4">
+                Payment Successful! Tickets have been purchased.
               </span>
-              <br/>
               <button
                 onClick={() => navigate("/")}
                 className="mt-5 px-6 py-3 bg-green-600 text-white font-medium rounded-md hover:bg-green-700"
               >
                 Go to Homepage
               </button>
-              <div className="mt-4 p-4 rounded-lg border bg-white shadow-md md:w-[700px]">
-              <span className="text-black">
-               Order Details
-              </span>
+              <div className="mt-8 p-6 rounded-lg border bg-white shadow-md md:w-[700px]">
+                <h3 className="text-xl font-bold text-black mb-4">
+                  Ticket Details
+                </h3>
                 <div className="border-t border-gray-200 px-4 py-6 sm:px-6">
                   {tickets.map((item, i) => (
-                    <div className="flex justify-between" key={i}>
-                      <dt className="text-base text-customBlack">{`${item.qty} * ${item.name}`}</dt>
+                    <div className="flex justify-between mb-2" key={i}>
+                      <dt className="text-base text-customBlack">{`${item.qty} × ${item.name}`}</dt>
                       <dd className="text-base font-medium text-customBlack">
                         <NumericFormat
                           value={Number(item.price * item.qty).toFixed(2)}
@@ -239,7 +178,7 @@ const SuccessComponent = (props: Props) => {
                       </dd>
                     </div>
                   ))}
-                  <div className="flex justify-between">
+                  <div className="flex justify-between mt-4 pt-4 border-t">
                     <dt className="text-base text-red-600">Subtotal</dt>
                     <dd className="text-base font-medium text-red-600">
                       <NumericFormat
@@ -277,7 +216,7 @@ const SuccessComponent = (props: Props) => {
                       />
                     </dd>
                   </div>
-                  <div className="flex justify-between border-t border-gray-200 pt-6">
+                  <div className="flex justify-between border-t border-gray-200 pt-6 mt-4">
                     <dt className="text-lg font-bold text-red-600">Total</dt>
                     <dd className="text-lg font-bold text-red-600">
                       <NumericFormat
@@ -299,7 +238,7 @@ const SuccessComponent = (props: Props) => {
             <div className="left skeleton"></div>
             <div className="right">
               <span className="flex items-center justify-center text-white">
-                Loading... do not refresh.
+                Verifying payment... Please wait.
               </span>
               {[1, 2, 3, 4, 5, 6, 7].map((_, i) => (
                 <div key={i} className="row skeleton"></div>

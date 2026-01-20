@@ -96,7 +96,7 @@ const CreateEventForm: React.FC = () => {
   const navigate = useNavigate();
 
   const user = useSelector(
-    (state: RootState) => state.auth.user
+    (state: RootState) => state.auth.user,
   ) as User | null;
   const hostid = user?.id || "";
 
@@ -139,7 +139,7 @@ const CreateEventForm: React.FC = () => {
 
   // Function to validate image file
   const validateImageFile = (
-    file: File
+    file: File,
   ): { isValid: boolean; error?: string } => {
     // Check file size
     if (file.size > MAX_FILE_SIZE) {
@@ -162,7 +162,7 @@ const CreateEventForm: React.FC = () => {
 
   // Function to check image dimensions
   const checkImageDimensions = (
-    file: File
+    file: File,
   ): Promise<{ isValid: boolean; error?: string }> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -225,7 +225,7 @@ const CreateEventForm: React.FC = () => {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setEventData({ ...eventData, [name]: value });
@@ -264,7 +264,7 @@ const CreateEventForm: React.FC = () => {
   const handleCategoryChange = (
     index: number,
     key: keyof TicketCategory,
-    value: string | number
+    value: string | number,
   ) => {
     const newCategories = [...eventData.ticketCategories];
     newCategories[index] = { ...newCategories[index], [key]: value };
@@ -296,7 +296,7 @@ const CreateEventForm: React.FC = () => {
 
   const handleStartDateChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const newStart = [...eventData.start];
     newStart[index].date = e.target.value;
@@ -305,7 +305,7 @@ const CreateEventForm: React.FC = () => {
 
   const handleEndDateChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const newEnd = [...eventData.end];
     newEnd[index].date = e.target.value;
@@ -314,7 +314,7 @@ const CreateEventForm: React.FC = () => {
 
   const handleStartTimeChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const newStart = [...eventData.start];
     newStart[index].time = e.target.value;
@@ -323,7 +323,7 @@ const CreateEventForm: React.FC = () => {
 
   const handleEndTimeChange = (
     e: React.ChangeEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
     const newEnd = [...eventData.end];
     newEnd[index].time = e.target.value;
@@ -354,7 +354,7 @@ const CreateEventForm: React.FC = () => {
           eventData.chargesBearer !== "" &&
           eventData.currency !== "" &&
           eventData.ticketCategories.every((category) =>
-            Object.values(category).every((value) => value.trim() !== "")
+            Object.values(category).every((value) => value.trim() !== ""),
           )
         );
       default:
@@ -469,7 +469,7 @@ const CreateEventForm: React.FC = () => {
         formData.append("youtubeUrl", eventData.youtubeUrl);
         console.log(
           "[DEBUG] YouTube URL added to FormData:",
-          eventData.youtubeUrl
+          eventData.youtubeUrl,
         );
       } else {
         console.log("[DEBUG] No YouTube URL provided (optional field)");
@@ -489,7 +489,7 @@ const CreateEventForm: React.FC = () => {
             Object.entries(category).forEach(([subKey, subValue]) => {
               formData.append(
                 `ticketCategories[${index}][${subKey}]`,
-                String(subValue)
+                String(subValue),
               );
             });
           });
@@ -995,7 +995,7 @@ const CreateEventForm: React.FC = () => {
                               handleCategoryChange(
                                 index,
                                 "name",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -1009,7 +1009,7 @@ const CreateEventForm: React.FC = () => {
                               handleCategoryChange(
                                 index,
                                 "price",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
@@ -1033,7 +1033,7 @@ const CreateEventForm: React.FC = () => {
                               handleCategoryChange(
                                 index,
                                 "numOfPeople",
-                                e.target.value
+                                e.target.value,
                               )
                             }
                           />
