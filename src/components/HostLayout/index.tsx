@@ -53,7 +53,6 @@ interface User {
   phone: string;
 }
 
-
 const HostLayer: React.FC = () => {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [formData, setFormData] = useState<FormData>({
@@ -79,7 +78,7 @@ const HostLayer: React.FC = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   const user = useSelector(
-    (state: RootState) => state.auth.user
+    (state: RootState) => state.auth.user,
   ) as User | null;
   //console.log(user);
 
@@ -93,7 +92,7 @@ const HostLayer: React.FC = () => {
   };
 
   const handleInputChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -134,8 +133,6 @@ const HostLayer: React.FC = () => {
     e.preventDefault();
     //console.log("Submitting form data:", formData);
 
-    
-
     if (!isValidPhoneNumber(formData.phone)) {
       toast.error("Invalid phone number");
       return;
@@ -146,11 +143,11 @@ const HostLayer: React.FC = () => {
         ...formData,
         hostid: user?.id, // safely append user id
       };
-     // console.log("Data to send:", dataToSend); // Check console to verify hostid is set
+      // console.log("Data to send:", dataToSend); // Check console to verify hostid is set
 
       await updateHost(dataToSend).unwrap();
       dispatch(setUpdateFlag(1)); // Ensure this line is executed
-      navigate("/dashboard");
+      navigate("/login");
     } catch (error) {
       console.error("Failed to update host profile: ", error);
       toast.error("Failed to update host profile. Please try again.");

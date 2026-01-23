@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import { FaEye, FaTimes, FaArrowLeft } from "react-icons/fa";
+import { FaEye, FaTimes, FaArrowLeft, FaUsers } from "react-icons/fa";
 import moticketlogo from "../../assets/images/moticketlogo.png";
 
 interface TicketData {
@@ -26,6 +26,18 @@ interface TicketData {
   processing_agent: string | null;
 }
 
+interface TransactionData {
+  pay_reference: string;
+  totalAmount: number;
+  ticketCount: number;
+  usedTickets: number;
+  tickets: TicketData[];
+  customerName: string;
+  customerEmail: string;
+  purchaseDate: string;
+  ticketClasses: string[];
+}
+
 interface FinancialTableProps {
   eventid: string;
   onBack: () => void;
@@ -33,19 +45,22 @@ interface FinancialTableProps {
 
 const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
   const [ticketData, setTicketData] = useState<TicketData[]>([]);
+  const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<"list" | "single">("list");
+  const [viewMode, setViewMode] = useState<"transactions" | "single">(
+    "transactions",
+  );
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionData | null>(null);
   const [selectedTicket, setSelectedTicket] = useState<TicketData | null>(null);
-  const [viewingFinancialReport, setViewingFinancialReport] =
-    useState<boolean>(false);
 
   // Fetch data from API
   useEffect(() => {
     const fetchTicketData = async () => {
       try {
         const response = await fetch(
-          `${process.env.REACT_APP_BASEURL}/eventhost/ticketsales_report/${eventid}`
+          `${process.env.REACT_APP_BASEURL}/eventhost/ticketsales_report/${eventid}`,
         );
         if (!response.ok) {
           throw new Error("Failed to fetch ticket data");
@@ -53,9 +68,46 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
         const data = await response.json();
         console.log(data);
         setTicketData(data);
+
+        // Process data to group by payment reference
+        const transactionMap = new Map<string, TransactionData>();
+
+        data.forEach((ticket: TicketData) => {
+          const ref = ticket.pay_reference;
+
+          if (!transactionMap.has(ref)) {
+            transactionMap.set(ref, {
+              pay_reference: ref,
+              totalAmount: 0,
+              ticketCount: 0,
+              usedTickets: 0,
+              tickets: [],
+              customerName: `${ticket.fname} ${ticket.lname}`,
+              customerEmail: ticket.email,
+              purchaseDate: ticket.buy_date_time,
+              ticketClasses: [],
+            });
+          }
+
+          const transaction = transactionMap.get(ref)!;
+          transaction.totalAmount += parseFloat(ticket.amount);
+          transaction.ticketCount += 1;
+
+          if (ticket.used === "1") {
+            transaction.usedTickets += 1;
+          }
+
+          transaction.tickets.push(ticket);
+
+          if (!transaction.ticketClasses.includes(ticket.ticket_class)) {
+            transaction.ticketClasses.push(ticket.ticket_class);
+          }
+        });
+
+        setTransactions(Array.from(transactionMap.values()));
       } catch (error) {
         setError(
-          error instanceof Error ? error.message : "An unknown error occurred"
+          error instanceof Error ? error.message : "An unknown error occurred",
         );
       } finally {
         setLoading(false);
@@ -67,9 +119,32 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
     }
   }, [eventid]);
 
-  // Export to Excel
+  // Export to Excel - both transactions and detailed tickets
   const exportToExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(
+    const workbook = XLSX.utils.book_new();
+
+    // Transactions sheet
+    const transactionsWorksheet = XLSX.utils.json_to_sheet(
+      transactions.map((transaction) => ({
+        "Payment Reference": transaction.pay_reference,
+        "Customer Name": transaction.customerName,
+        "Customer Email": transaction.customerEmail,
+        "Total Amount": `£${transaction.totalAmount.toFixed(2)}`,
+        "Number of Tickets": transaction.ticketCount,
+        "Used Tickets": transaction.usedTickets,
+        "Available Tickets": transaction.ticketCount - transaction.usedTickets,
+        "Purchase Date": transaction.purchaseDate.split(" ")[0],
+        "Ticket Classes": transaction.ticketClasses.join(", "),
+      })),
+    );
+    XLSX.utils.book_append_sheet(
+      workbook,
+      transactionsWorksheet,
+      "Transactions",
+    );
+
+    // Detailed tickets sheet
+    const ticketsWorksheet = XLSX.utils.json_to_sheet(
       ticketData.map((ticket) => ({
         "Full Name": `${ticket.fname} ${ticket.lname}`,
         "Payment Reference": ticket.pay_reference,
@@ -79,11 +154,12 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
         "Purchase Date": ticket.buy_date_time.split(" ")[0],
         Email: ticket.email,
         Phone: ticket.user_id,
-      }))
+        "Ticket Reference": ticket.ticket_ref,
+      })),
     );
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
-    XLSX.writeFile(workbook, "ticket_data.xlsx");
+    XLSX.utils.book_append_sheet(workbook, ticketsWorksheet, "Ticket Details");
+
+    XLSX.writeFile(workbook, "financial_report.xlsx");
   };
 
   // Export to PDF
@@ -91,21 +167,25 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
     const doc = new jsPDF();
 
     const tableColumn = [
-      "Full Name",
       "Payment Reference",
-      "Category",
-      "Amount (£)",
+      "Customer",
+      "Total Amount",
+      "Tickets",
       "Status",
       "Date",
     ];
 
-    const tableRows = ticketData.map((ticket) => [
-      `${ticket.fname} ${ticket.lname}`,
-      ticket.pay_reference,
-      ticket.ticket_class,
-      parseFloat(ticket.amount).toFixed(2), // Keep raw number for better alignment
-      ticket.used === "1" ? "Used" : "Not Used",
-      ticket.buy_date_time.split(" ")[0],
+    const tableRows = transactions.map((transaction) => [
+      transaction.pay_reference,
+      transaction.customerName,
+      `£${transaction.totalAmount.toFixed(2)}`,
+      `${transaction.ticketCount} (${transaction.usedTickets} used)`,
+      transaction.usedTickets === transaction.ticketCount
+        ? "All Used"
+        : transaction.usedTickets > 0
+          ? "Partially Used"
+          : "None Used",
+      transaction.purchaseDate.split(" ")[0],
     ]);
 
     autoTable(doc, {
@@ -125,10 +205,10 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
         fontStyle: "bold",
       },
       columnStyles: {
-        0: { cellWidth: 35 }, // Full Name
-        1: { cellWidth: 45 }, // Payment Ref
-        2: { cellWidth: 25 }, // Category
-        3: { cellWidth: 20, halign: "right" }, // Amount
+        0: { cellWidth: 35 }, // Payment Ref
+        1: { cellWidth: 40 }, // Customer
+        2: { cellWidth: 25, halign: "right" }, // Amount
+        3: { cellWidth: 25, halign: "center" }, // Tickets
         4: { cellWidth: 25, halign: "center" }, // Status
         5: { cellWidth: 30 }, // Date
       },
@@ -138,11 +218,17 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
     });
 
     doc.setFontSize(14);
-    doc.text("Ticket Sales Report", 14, 20);
-    doc.save("ticket_data.pdf");
+    doc.text("Financial Transactions Report", 14, 20);
+    doc.save("financial_report.pdf");
   };
 
-  // View single ticket
+  // View transaction details
+  const handleViewTransaction = (transaction: TransactionData) => {
+    setSelectedTransaction(transaction);
+    setViewMode("single");
+  };
+
+  // View individual ticket
   const handleViewTicket = (ticket: TicketData) => {
     setSelectedTicket(ticket);
     setViewMode("single");
@@ -150,7 +236,8 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
 
   // Return to list view
   const handleBackToList = () => {
-    setViewMode("list");
+    setViewMode("transactions");
+    setSelectedTransaction(null);
     setSelectedTicket(null);
   };
 
@@ -175,8 +262,8 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
       </div>
     );
 
-  // Single Ticket View
-  if (viewMode === "single" && selectedTicket) {
+  // Single Transaction View
+  if (viewMode === "single" && selectedTransaction) {
     return (
       <div className="p-4 md:p-8">
         <div className="flex justify-between items-center mb-6">
@@ -184,10 +271,193 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
             onClick={handleBackToList}
             className="flex items-center text-blue-600 hover:text-blue-800"
           >
-            <FaArrowLeft className="mr-2" /> Back to All Tickets
+            <FaArrowLeft className="mr-2" /> Back to All Transactions
           </button>
           <button
-            onClick={onBack} // This will close the entire FinancialTable modal
+            onClick={onBack}
+            className="flex items-center text-gray-600 hover:text-gray-800"
+          >
+            <FaTimes className="mr-1" /> Close Report
+          </button>
+        </div>
+
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="flex justify-center mb-8">
+            <img
+              src={moticketlogo}
+              alt="MoTicket Logo"
+              className="h-24 object-contain"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div className="border p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-500 mb-2">Total Amount</h3>
+              <p className="text-xl font-bold">
+                £{selectedTransaction.totalAmount.toFixed(2)}
+              </p>
+            </div>
+            <div className="border p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-500 mb-2">
+                Number of Tickets
+              </h3>
+              <p className="text-xl">
+                {selectedTransaction.ticketCount}
+                <span className="text-sm text-gray-600 ml-2">
+                  ({selectedTransaction.usedTickets} used)
+                </span>
+              </p>
+            </div>
+            <div className="border p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-500 mb-2">
+                Purchase Date
+              </h3>
+              <p className="text-xl">
+                {formatDate(selectedTransaction.purchaseDate)}
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="font-semibold text-lg mb-4">Customer Information</h3>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Customer Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Payment Reference
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ticket Classes
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {selectedTransaction.customerName}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap break-all">
+                      {selectedTransaction.customerEmail}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap break-all">
+                      {selectedTransaction.pay_reference}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {selectedTransaction.ticketClasses.join(", ")}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="font-semibold text-lg mb-4">
+              Tickets in this Transaction ({selectedTransaction.tickets.length})
+            </h3>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Ticket Ref
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Class
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {selectedTransaction.tickets.map((ticket) => (
+                    <tr key={ticket.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {ticket.ticket_ref}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {ticket.ticket_class}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        £{parseFloat(ticket.amount).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            ticket.used === "1"
+                              ? "bg-green-100 text-green-800"
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {ticket.used === "1" ? "Used" : "Not Used"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleViewTicket(ticket)}
+                          className="text-blue-600 hover:text-blue-900 text-sm"
+                        >
+                          View Details
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              onClick={handleBackToList}
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+            >
+              Back to Transactions
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Individual Ticket View
+  if (viewMode === "single" && selectedTicket) {
+    return (
+      <div className="p-4 md:p-8">
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={() => {
+              // Find the transaction this ticket belongs to
+              const transaction = transactions.find((t) =>
+                t.tickets.some((ticket) => ticket.id === selectedTicket.id),
+              );
+              if (transaction) {
+                setSelectedTransaction(transaction);
+                setSelectedTicket(null);
+              } else {
+                handleBackToList();
+              }
+            }}
+            className="flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <FaArrowLeft className="mr-2" /> Back to Transaction
+          </button>
+          <button
+            onClick={onBack}
             className="flex items-center text-gray-600 hover:text-gray-800"
           >
             <FaTimes className="mr-1" /> Close Report
@@ -321,12 +591,14 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
     );
   }
 
-  // List View
+  // Transactions List View
   return (
     <div className="p-4 md:p-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Ticket Management</h1>
-        {ticketData.length > 0 && (
+        <h1 className="text-2xl font-bold text-white">
+          Financial Transactions
+        </h1>
+        {transactions.length > 0 && (
           <div className="flex space-x-3">
             <button
               onClick={exportToExcel}
@@ -350,16 +622,16 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
             <thead className="bg-[#25aae1]">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Full Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Payment Reference
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Category
+                  Customer
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Amount
+                  Total Amount
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                  Tickets
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Status
@@ -373,38 +645,71 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {ticketData.length > 0 ? (
-                ticketData.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">{`${ticket.fname} ${ticket.lname}`}</td>
+              {transactions.length > 0 ? (
+                transactions.map((transaction) => (
+                  <tr
+                    key={transaction.pay_reference}
+                    className="hover:bg-gray-50"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {ticket.pay_reference}
+                      {transaction.pay_reference}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {ticket.ticket_class}
+                      <div className="flex items-center">
+                        <FaUsers className="text-gray-400 mr-2" />
+                        <div>
+                          <div className="font-medium">
+                            {transaction.customerName}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {transaction.customerEmail}
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      £{parseFloat(ticket.amount).toFixed(2)}
+                      <div className="font-bold">
+                        £{transaction.totalAmount.toFixed(2)}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {transaction.ticketClasses.join(", ")}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium">
+                        {transaction.ticketCount} tickets
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {transaction.usedTickets} used •{" "}
+                        {transaction.ticketCount - transaction.usedTickets}{" "}
+                        available
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          ticket.used === "1"
+                          transaction.usedTickets === transaction.ticketCount
                             ? "bg-green-100 text-green-800"
-                            : "bg-yellow-100 text-yellow-800"
+                            : transaction.usedTickets > 0
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-blue-100 text-blue-800"
                         }`}
                       >
-                        {ticket.used === "1" ? "Used" : "Not Used"}
+                        {transaction.usedTickets === transaction.ticketCount
+                          ? "All Used"
+                          : transaction.usedTickets > 0
+                            ? "Partially Used"
+                            : "None Used"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {ticket.buy_date_time.split(" ")[0]}
+                      {transaction.purchaseDate.split(" ")[0]}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <button
-                        onClick={() => handleViewTicket(ticket)}
+                        onClick={() => handleViewTransaction(transaction)}
                         className="text-blue-600 hover:text-blue-900"
-                        title="View Details"
+                        title="View Transaction Details"
                       >
                         <FaEye className="text-lg" />
                       </button>
@@ -430,7 +735,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
                         />
                       </svg>
                       <h3 className="text-lg font-medium text-gray-700 mb-2">
-                        No Ticket Data Found
+                        No Transaction Data Found
                       </h3>
                       <p className="text-gray-500">
                         There are no ticket sales for this event yet.
@@ -443,6 +748,40 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
           </table>
         </div>
       </div>
+
+      {/* Summary */}
+      {transactions.length > 0 && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="font-semibold text-gray-700 mb-2">Summary</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Total Transactions:</span>
+              <span className="font-semibold ml-2">{transactions.length}</span>
+            </div>
+            <div>
+              <span className="text-gray-600">Total Revenue:</span>
+              <span className="font-semibold ml-2">
+                £
+                {transactions
+                  .reduce((sum, t) => sum + t.totalAmount, 0)
+                  .toFixed(2)}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">Total Tickets:</span>
+              <span className="font-semibold ml-2">
+                {transactions.reduce((sum, t) => sum + t.ticketCount, 0)}
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-600">Used Tickets:</span>
+              <span className="font-semibold ml-2">
+                {transactions.reduce((sum, t) => sum + t.usedTickets, 0)}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
