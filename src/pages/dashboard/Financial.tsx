@@ -16,7 +16,7 @@ interface TicketData {
   pdf_file: string;
   event_id: string;
   ticket_class: string;
-  amount: string;
+  amount: string; // This is the price of ONE ticket
   pay_reference: string;
   payment_channel: string;
   buy_date_time: string;
@@ -28,7 +28,6 @@ interface TicketData {
 
 interface TransactionData {
   pay_reference: string;
-  totalAmount: number;
   ticketCount: number;
   usedTickets: number;
   tickets: TicketData[];
@@ -36,6 +35,7 @@ interface TransactionData {
   customerEmail: string;
   purchaseDate: string;
   ticketClasses: string[];
+  // Removed transactionTotal since we're not calculating it
 }
 
 interface FinancialTableProps {
@@ -78,7 +78,6 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
           if (!transactionMap.has(ref)) {
             transactionMap.set(ref, {
               pay_reference: ref,
-              totalAmount: 0,
               ticketCount: 0,
               usedTickets: 0,
               tickets: [],
@@ -90,7 +89,6 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
           }
 
           const transaction = transactionMap.get(ref)!;
-          transaction.totalAmount += parseFloat(ticket.amount);
           transaction.ticketCount += 1;
 
           if (ticket.used === "1") {
@@ -119,6 +117,21 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
     }
   }, [eventid]);
 
+  // Format currency to Naira
+  const formatNaira = (amount: number | string) => {
+    const numAmount = typeof amount === "string" ? parseFloat(amount) : amount;
+    return `₦${numAmount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,")}`;
+  };
+
+  // Get ticket price for display (shows the price of one ticket in the transaction)
+  const getTicketPrice = (transaction: TransactionData) => {
+    if (transaction.tickets.length > 0) {
+      // Just show the price of the first ticket
+      return formatNaira(transaction.tickets[0].amount);
+    }
+    return "₦0.00";
+  };
+
   // Export to Excel - both transactions and detailed tickets
   const exportToExcel = () => {
     const workbook = XLSX.utils.book_new();
@@ -129,7 +142,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
         "Payment Reference": transaction.pay_reference,
         "Customer Name": transaction.customerName,
         "Customer Email": transaction.customerEmail,
-        "Total Amount": `£${transaction.totalAmount.toFixed(2)}`,
+        "Ticket Price": getTicketPrice(transaction),
         "Number of Tickets": transaction.ticketCount,
         "Used Tickets": transaction.usedTickets,
         "Available Tickets": transaction.ticketCount - transaction.usedTickets,
@@ -149,7 +162,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
         "Full Name": `${ticket.fname} ${ticket.lname}`,
         "Payment Reference": ticket.pay_reference,
         Category: ticket.ticket_class,
-        Amount: `£${parseFloat(ticket.amount).toFixed(2)}`,
+        "Ticket Price": formatNaira(ticket.amount),
         Status: ticket.used === "1" ? "Used" : "Not Used",
         "Purchase Date": ticket.buy_date_time.split(" ")[0],
         Email: ticket.email,
@@ -169,7 +182,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
     const tableColumn = [
       "Payment Reference",
       "Customer",
-      "Total Amount",
+      "Ticket Price",
       "Tickets",
       "Status",
       "Date",
@@ -178,7 +191,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
     const tableRows = transactions.map((transaction) => [
       transaction.pay_reference,
       transaction.customerName,
-      `£${transaction.totalAmount.toFixed(2)}`,
+      getTicketPrice(transaction),
       `${transaction.ticketCount} (${transaction.usedTickets} used)`,
       transaction.usedTickets === transaction.ticketCount
         ? "All Used"
@@ -207,10 +220,10 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
       columnStyles: {
         0: { cellWidth: 35 }, // Payment Ref
         1: { cellWidth: 40 }, // Customer
-        2: { cellWidth: 25, halign: "right" }, // Amount
+        2: { cellWidth: 25, halign: "right" }, // Ticket Price
         3: { cellWidth: 25, halign: "center" }, // Tickets
         4: { cellWidth: 25, halign: "center" }, // Status
-        5: { cellWidth: 30 }, // Date
+        5: { cellWidth: 25 }, // Date
       },
       theme: "striped",
       alternateRowStyles: { fillColor: [245, 245, 245] },
@@ -264,6 +277,8 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
 
   // Single Transaction View
   if (viewMode === "single" && selectedTransaction) {
+    const firstTicket = selectedTransaction.tickets[0];
+
     return (
       <div className="p-4 md:p-8">
         <div className="flex justify-between items-center mb-6">
@@ -292,20 +307,21 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="border p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-500 mb-2">Total Amount</h3>
+              <h3 className="font-semibold text-gray-500 mb-2">Ticket Price</h3>
               <p className="text-xl font-bold">
-                £{selectedTransaction.totalAmount.toFixed(2)}
+                {firstTicket ? formatNaira(firstTicket.amount) : "₦0.00"}
               </p>
+              <p className="text-sm text-gray-600 mt-1">Per ticket</p>
             </div>
             <div className="border p-4 rounded-lg">
               <h3 className="font-semibold text-gray-500 mb-2">
-                Number of Tickets
+                Ticket Status
               </h3>
-              <p className="text-xl">
-                {selectedTransaction.ticketCount}
-                <span className="text-sm text-gray-600 ml-2">
-                  ({selectedTransaction.usedTickets} used)
-                </span>
+              <p className="text-xl">{selectedTransaction.usedTickets} used</p>
+              <p className="text-sm text-gray-600 mt-1">
+                {selectedTransaction.ticketCount -
+                  selectedTransaction.usedTickets}{" "}
+                available
               </p>
             </div>
             <div className="border p-4 rounded-lg">
@@ -373,7 +389,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
                       Class
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
+                      Ticket Price
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
@@ -393,7 +409,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
                         {ticket.ticket_class}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        £{parseFloat(ticket.amount).toFixed(2)}
+                        {formatNaira(ticket.amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -475,11 +491,9 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <div className="border p-4 rounded-lg">
-              <h3 className="font-semibold text-gray-500 mb-2">
-                Ticket Amount
-              </h3>
+              <h3 className="font-semibold text-gray-500 mb-2">Ticket Price</h3>
               <p className="text-xl font-bold">
-                £{parseFloat(selectedTicket.amount).toFixed(2)}
+                {formatNaira(selectedTicket.amount)}
               </p>
             </div>
             <div className="border p-4 rounded-lg">
@@ -521,7 +535,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
                       Category
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Amount
+                      Ticket Price
                     </th>
                   </tr>
                 </thead>
@@ -538,7 +552,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
                       {selectedTicket.ticket_class}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      £{parseFloat(selectedTicket.amount).toFixed(2)}
+                      {formatNaira(selectedTicket.amount)}
                     </td>
                   </tr>
                 </tbody>
@@ -628,7 +642,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
                   Customer
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                  Total Amount
+                  Ticket Price
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                   Tickets
@@ -669,11 +683,9 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-bold">
-                        £{transaction.totalAmount.toFixed(2)}
+                        {getTicketPrice(transaction)}
                       </div>
-                      <div className="text-sm text-gray-500">
-                        {transaction.ticketClasses.join(", ")}
-                      </div>
+                      <div className="text-sm text-gray-500">Per ticket</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="font-medium">
@@ -753,22 +765,13 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
       {transactions.length > 0 && (
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-gray-700 mb-2">Summary</h3>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <span className="text-gray-600">Total Transactions:</span>
               <span className="font-semibold ml-2">{transactions.length}</span>
             </div>
             <div>
-              <span className="text-gray-600">Total Revenue:</span>
-              <span className="font-semibold ml-2">
-                £
-                {transactions
-                  .reduce((sum, t) => sum + t.totalAmount, 0)
-                  .toFixed(2)}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-600">Total Tickets:</span>
+              <span className="text-gray-600">Total Tickets Sold:</span>
               <span className="font-semibold ml-2">
                 {transactions.reduce((sum, t) => sum + t.ticketCount, 0)}
               </span>
