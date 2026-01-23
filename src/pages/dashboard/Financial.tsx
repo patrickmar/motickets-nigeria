@@ -771,7 +771,7 @@ const FinancialTable: React.FC<FinancialTableProps> = ({ eventid, onBack }) => {
               <span className="font-semibold ml-2">{transactions.length}</span>
             </div>
             <div>
-              <span className="text-gray-600">Total Tickets Sold:</span>
+              <span className="text-gray-600">Total Tickets Dispensed:</span>
               <span className="font-semibold ml-2">
                 {transactions.reduce((sum, t) => sum + t.ticketCount, 0)}
               </span>
