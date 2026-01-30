@@ -48,7 +48,6 @@ const Header: React.FC = () => {
   const [mobileMenu, setMobileMenu] = useState<boolean>(false);
   const [query, setQuery] = useState<string>("");
   const [isVisible, setIsVisible] = useState(false);
-  console.log(query);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -57,7 +56,7 @@ const Header: React.FC = () => {
 
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const user = useSelector(
-    (state: RootState) => state.auth.user
+    (state: RootState) => state.auth.user,
   ) as User | null;
 
   const hostid = user?.id || "";
