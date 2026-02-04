@@ -704,60 +704,76 @@ const CreateEventForm: React.FC = () => {
                       multiple
                       required
                     />
-                    <div
+                    {/* <div
                       className="cursor-pointer bg-gray-300 text-gray-600 rounded-full flex items-center justify-center w-6 h-6 text-sm lg:w-8 lg:h-8 lg:text-base"
                       onClick={handleInformationClick}
                       style={{ fontSize: "0.75rem" }}
                     >
                       i
-                    </div>
+                    </div> */}
                   </div>
                   <p className="text-sm text-gray-500 mt-2">
                     Maximum file size: 5MB | Supported formats: JPEG, PNG, GIF
                   </p>
                 </div>
                 <div className="mt-2 flex flex-wrap">
-                  {selectedImages.map((banner, index) => (
-                    <div key={index} className="mr-2 mb-2 relative">
-                      <img
-                        src={URL.createObjectURL(banner)}
-                        alt={`Event ${index + 1}`}
-                        className="h-24 w-24 object-cover border rounded-md"
-                      />
-                      <button
-                        type="button"
-                        className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                        onClick={() => handleImageDelete(index)}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          className="w-4 h-4"
+                  {selectedImages.map((banner, index) => {
+                    // Calculate file size in KB or MB
+                    const fileSizeInBytes = banner.size;
+                    const fileSizeInKB = fileSizeInBytes / 1024;
+                    const fileSizeInMB = fileSizeInBytes / (1024 * 1024);
+
+                    // Format the size appropriately
+                    const displaySize =
+                      fileSizeInMB >= 1
+                        ? `${fileSizeInMB.toFixed(2)} MB`
+                        : `${fileSizeInKB.toFixed(2)} KB`;
+
+                    return (
+                      <div key={index} className="mr-2 mb-2 relative">
+                        <img
+                          src={URL.createObjectURL(banner)}
+                          alt={`Event ${index + 1}`}
+                          className="h-24 w-24 object-cover border rounded-md"
+                        />
+                        <button
+                          type="button"
+                          className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                          onClick={() => handleImageDelete(index)}
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                      <div className="text-xs mt-1 text-center">
-                        {(banner.size / 1024 / 1024).toFixed(2)}MB
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                        <div className="text-xs mt-1 text-center">
+                          {displaySize} {/* Show formatted size */}
+                        </div>
+                        {/* Optional: Show dimensions */}
+                        <div className="text-xs text-center text-gray-400">
+                          {banner.name.length > 12
+                            ? `${banner.name.substring(0, 10)}...`
+                            : banner.name}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    );
+                  })}
+                </div>{" "}
               </div>
 
               {showInformation && (
                 <div className="bg-white p-4 border rounded-md">
                   <p className="italic text-blue-400">
-                    Event graphics preferably include dimensions (220 by 330 px)
-                    and (500 by 550 px) but any size provided may be resized to
-                    fit. Supported formats are jpg, jpeg, png, gif.
                     <br />
                     <strong>Maximum file size: 5MB per image</strong>
                   </p>
